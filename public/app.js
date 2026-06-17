@@ -14,6 +14,7 @@ const els = {
   createRoom: document.querySelector('#createRoom'),
   joinRoom: document.querySelector('#joinRoom'),
   soloTest: document.querySelector('#soloTest'),
+  openRules: document.querySelector('#openRules'),
   testControls: document.querySelector('#testControls'),
   seatP1: document.querySelector('#seatP1'),
   seatP2: document.querySelector('#seatP2'),
@@ -50,6 +51,8 @@ const els = {
   cardOverlay: document.querySelector('#cardOverlay'),
   cardOverlayBody: document.querySelector('#cardOverlayBody'),
   closeCardOverlay: document.querySelector('#closeCardOverlay'),
+  rulesOverlay: document.querySelector('#rulesOverlay'),
+  closeRulesOverlay: document.querySelector('#closeRulesOverlay'),
   message: document.querySelector('#message')
 };
 
@@ -69,6 +72,7 @@ const cardSounds = createCardSoundEffects();
 els.createRoom.addEventListener('click', createRoom);
 els.joinRoom.addEventListener('click', joinRoom);
 els.soloTest.addEventListener('click', startSoloTest);
+els.openRules.addEventListener('click', openRulesOverlay);
 els.seatP1.addEventListener('click', () => switchTestSeat('p1'));
 els.seatP2.addEventListener('click', () => switchTestSeat('p2'));
 els.startGame.addEventListener('click', () => postAction('start'));
@@ -104,15 +108,22 @@ els.viewDiscardedCards.addEventListener('click', () => {
 els.submitScore.addEventListener('click', submitScore);
 els.restartGame.addEventListener('click', () => postAction('restart'));
 els.closeCardOverlay.addEventListener('click', closeCardDetail);
+els.closeRulesOverlay.addEventListener('click', closeRulesOverlay);
 els.cardOverlay.addEventListener('click', (event) => {
   if (event.target.dataset.closeCardDetail !== undefined) {
     closeCardDetail();
+  }
+});
+els.rulesOverlay.addEventListener('click', (event) => {
+  if (event.target.dataset.closeRules !== undefined) {
+    closeRulesOverlay();
   }
 });
 setupUserAudioUnlock();
 window.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') {
     closeCardDetail();
+    closeRulesOverlay();
   }
 });
 
@@ -584,6 +595,14 @@ function openCardDetail(cardId) {
 function closeCardDetail() {
   els.cardOverlay.classList.add('hidden');
   els.cardOverlayBody.innerHTML = '';
+}
+
+function openRulesOverlay() {
+  els.rulesOverlay.classList.remove('hidden');
+}
+
+function closeRulesOverlay() {
+  els.rulesOverlay.classList.add('hidden');
 }
 
 function findVisibleCard(cardId) {

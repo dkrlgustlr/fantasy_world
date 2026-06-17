@@ -13,7 +13,10 @@
           <p class="eyebrow">Local Wi-Fi MVP</p>
           <h1>판타지월드</h1>
         </div>
-        <div id="connection" class="pill">대기</div>
+        <div class="topbar-actions">
+          <button id="openRules" class="help-button" type="button">게임 방법</button>
+          <div id="connection" class="pill">대기</div>
+        </div>
       </section>
 
       <section id="testControls" class="test-controls hidden">
@@ -147,6 +150,14 @@
         <div class="card-overlay-panel">
           <button id="closeCardOverlay" class="close-card-overlay" type="button">닫기</button>
           <div id="cardOverlayBody"></div>
+        </div>
+      </section>
+
+      <section id="rulesOverlay" class="rules-overlay hidden" role="dialog" aria-modal="true" aria-label="게임 방법">
+        <div class="rules-overlay-backdrop" data-close-rules></div>
+        <div class="rules-overlay-panel">
+          <button id="closeRulesOverlay" class="close-rules-overlay" type="button">닫기</button>
+          <img class="rules-manual-image" src="/assets/ui/how-to-play.svg" alt="판타지월드 게임 방법 설명서">
         </div>
       </section>
     </main>

@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1280" viewBox="0 0 900 1280" role="img" aria-labelledby="title desc">
+  <title id="title">판타지월드 게임 방법</title>
+  <desc id="desc">판타지월드 2인 카드게임의 준비, 턴 진행, 종료, 점수 계산 방법을 설명하는 이미지</desc>
+  <defs>
+    <linearGradient id="paper" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff4d7"/>
+      <stop offset="0.5" stop-color="#ead5aa"/>
+      <stop offset="1" stop-color="#caa36c"/>
+    </linearGradient>
+    <linearGradient id="green" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#102c22"/>
+      <stop offset="1" stop-color="#07130f"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffdf8a"/>
+      <stop offset="1" stop-color="#8c5b25"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#120b04" flood-opacity="0.35"/>
+    </filter>
+    <style>
+      .title { font: 900 66px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif; fill: #fff5d8; letter-spacing: 0; }
+      .sub { font: 800 24px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif; fill: #e4c07d; }
+      .head { font: 900 30px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif; fill: #2a1b0f; }
+      .body { font: 800 23px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif; fill: #2b2118; }
+      .small { font: 800 20px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif; fill: #4a3828; }
+      .chip { font: 900 20px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif; fill: #fff7dc; }
+      .num { font: 900 28px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif; fill: #fff8dc; }
+    </style>
+  </defs>
+
+  <rect width="900" height="1280" fill="#07130f"/>
+  <rect x="18" y="18" width="864" height="1244" rx="34" fill="url(#green)" stroke="#9b6b32" stroke-width="8"/>
+  <path d="M58 83 C185 32 326 59 450 96 C574 59 715 32 842 83" fill="none" stroke="#7b5a2b" stroke-width="3" opacity="0.55"/>
+  <path d="M58 119 C190 88 307 109 450 139 C593 109 710 88 842 119" fill="none" stroke="#2f6f4c" stroke-width="2" opacity="0.65"/>
+
+  <text class="title" x="450" y="96" text-anchor="middle">판타지월드</text>
+  <text class="sub" x="450" y="132" text-anchor="middle">처음 보는 사람도 바로 하는 2인 진행 설명서</text>
+
+  <rect x="64" y="165" width="772" height="1005" rx="28" fill="url(#paper)" filter="url(#shadow)"/>
+  <rect x="86" y="190" width="728" height="976" rx="20" fill="none" stroke="#8d6636" stroke-width="3" opacity="0.65"/>
+
+  <g transform="translate(116 226)">
+    <circle cx="29" cy="29" r="29" fill="url(#gold)" stroke="#4b2b12" stroke-width="3"/>
+    <text class="num" x="29" y="39" text-anchor="middle">1</text>
+    <text class="head" x="76" y="39">방 만들기 / 입장</text>
+    <text class="body" x="76" y="83">한 명은 방을 만들고, 다른 한 명은 초대코드로 입장.</text>
+    <text class="small" x="76" y="118">2명이 모이면 선 정하기 버튼으로 첫 턴을 정합니다.</text>
+  </g>
+
+  <g transform="translate(116 382)">
+    <circle cx="29" cy="29" r="29" fill="url(#gold)" stroke="#4b2b12" stroke-width="3"/>
+    <text class="num" x="29" y="39" text-anchor="middle">2</text>
+    <text class="head" x="76" y="39">턴 진행</text>
+    <rect x="76" y="63" width="168" height="54" rx="14" fill="#102b22" stroke="#9d763b" stroke-width="3"/>
+    <text class="chip" x="160" y="98" text-anchor="middle">카드 가져오기</text>
+    <path d="M262 90 H337" stroke="#6b3d18" stroke-width="8" stroke-linecap="round"/>
+    <path d="M337 90 l-20 -16 v32 z" fill="#6b3d18"/>
+    <rect x="358" y="63" width="128" height="54" rx="14" fill="#7f231b" stroke="#9d763b" stroke-width="3"/>
+    <text class="chip" x="422" y="98" text-anchor="middle">버리기</text>
+    <text class="body" x="76" y="148">반드시 뽑기 먼저,</text>
+    <text class="body" x="76" y="178">그 다음 손패에서 1장을 버립니다.</text>
+    <text class="small" x="76" y="209">덱 또는 공개된 버린 카드에서 가져올 수 있습니다.</text>
+  </g>
+
+  <g transform="translate(116 588)">
+    <circle cx="29" cy="29" r="29" fill="url(#gold)" stroke="#4b2b12" stroke-width="3"/>
+    <text class="num" x="29" y="39" text-anchor="middle">3</text>
+    <text class="head" x="76" y="39">게임 종료</text>
+    <text class="body" x="76" y="83">버린 카드가 10장이 되면 즉시 종료됩니다.</text>
+    <text class="small" x="76" y="118">종료 뒤에는 수동 점수판에서 각자 점수를 입력합니다.</text>
+  </g>
+
+  <g transform="translate(116 744)">
+    <circle cx="29" cy="29" r="29" fill="url(#gold)" stroke="#4b2b12" stroke-width="3"/>
+    <text class="num" x="29" y="39" text-anchor="middle">4</text>
+    <text class="head" x="76" y="39">점수 계산</text>
+    <text class="body" x="76" y="83">기본 힘은 카드에 적힌 숫자 그대로 입력.</text>
+    <text class="small" x="76" y="118">보너스와 패널티는 직접 판단해서 더하거나 뺍니다.</text>
+    <text class="small" x="76" y="151">자동 계산보다 손수 계산하는 맛을 살립니다.</text>
+  </g>
+
+  <g transform="translate(116 930)">
+    <circle cx="29" cy="29" r="29" fill="url(#gold)" stroke="#4b2b12" stroke-width="3"/>
+    <text class="num" x="29" y="39" text-anchor="middle">5</text>
+    <text class="head" x="76" y="39">특수 카드 선택</text>
+    <text class="body" x="76" y="83">신기루, 변신 능력자, 도플갱어,</text>
+    <text class="body" x="76" y="117">변화의 책, 강령술사 등은</text>
+    <text class="body" x="76" y="151">점수 계산 때 직접 대상을 고릅니다.</text>
+    <rect x="76" y="174" width="500" height="52" rx="14" fill="#fff1c4" stroke="#a06d2f" stroke-width="3"/>
+    <text class="small" x="326" y="208" text-anchor="middle">강령술사는 버린 카드 보기 버튼으로 후보 확인</text>
+  </g>
+
+  <g transform="translate(92 1188)">
+    <rect x="0" y="0" width="716" height="56" rx="18" fill="#102b22" stroke="#a87936" stroke-width="3"/>
+    <text class="chip" x="358" y="36" text-anchor="middle">핵심: 7장 손패를 만들고, 버린 카드 10장이 되면 점수 대결</text>
+  </g>
+</svg>
