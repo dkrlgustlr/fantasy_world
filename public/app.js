@@ -17,6 +17,8 @@ const els = {
   testControls: document.querySelector('#testControls'),
   seatP1: document.querySelector('#seatP1'),
   seatP2: document.querySelector('#seatP2'),
+  roomActions: document.querySelector('#roomActions'),
+  leaveRoom: document.querySelector('#leaveRoom'),
   lobbyCode: document.querySelector('#lobbyCode'),
   lobbyPlayers: document.querySelector('#lobbyPlayers'),
   startGame: document.querySelector('#startGame'),
@@ -71,6 +73,7 @@ els.seatP2.addEventListener('click', () => switchTestSeat('p2'));
 els.startGame.addEventListener('click', () => postAction('start'));
 els.drawDeck.addEventListener('click', () => postAction('draw-deck'));
 els.endGame.addEventListener('click', () => postAction('end'));
+els.leaveRoom.addEventListener('click', leaveRoom);
 els.selectedCardAction.addEventListener('click', () => {
   const action = els.selectedCardAction.dataset.cardAction;
   const cardId = els.selectedCardAction.dataset.cardId;
@@ -153,6 +156,27 @@ async function switchTestSeat(playerId) {
   await refreshView();
 }
 
+async function leaveRoom() {
+  const code = state.code;
+  const playerToken = state.playerToken;
+  try {
+    if (code && playerToken) {
+      await request(`/api/rooms/${code}/leave`, {
+        method: 'POST',
+        body: { playerToken }
+      });
+    }
+  } catch {
+    // Local leave should still work even if the room already expired remotely.
+  } finally {
+    clearSession();
+    clearCoinTimers();
+    closeCardDetail();
+    render();
+    showMessage('방에서 나왔습니다.');
+  }
+}
+
 async function postAction(action, body = {}) {
   playActionSound(action);
   const result = await request(`/api/rooms/${state.code}/${action}`, {
@@ -217,10 +241,12 @@ function render() {
   const view = state.view;
   if (!view) {
     renderTestControls(null);
+    renderRoomActions(null);
     showOnly('entry');
     return;
   }
   renderTestControls(view);
+  renderRoomActions(view);
   els.connection.textContent = view.phase === 'ended' ? '종료' : '연결됨';
   if (view.phase === 'waiting') {
     clearCoinTimers();
@@ -570,6 +596,20 @@ function setSession(code, playerToken) {
   localStorage.setItem('fw:token', playerToken);
 }
 
+function clearSession() {
+  if (state.events) {
+    state.events.close();
+    state.events = null;
+  }
+  state.code = '';
+  state.playerToken = '';
+  state.selectedCardId = '';
+  state.view = null;
+  localStorage.removeItem('fw:code');
+  localStorage.removeItem('fw:token');
+  clearTestMode();
+}
+
 function setTestTokens(testTokens) {
   state.testTokens = testTokens;
   localStorage.setItem('fw:testTokens', JSON.stringify(testTokens));
@@ -596,6 +636,14 @@ function renderTestControls(view) {
   els.seatP2.classList.toggle('active', view.you.id === 'p2');
   els.seatP1.disabled = view.you.id === 'p1';
   els.seatP2.disabled = view.you.id === 'p2';
+}
+
+function renderRoomActions(view) {
+  const isInRoom = Boolean(view?.you);
+  els.roomActions.classList.toggle('hidden', !isInRoom);
+  els.endGame.hidden = !isInRoom || view.phase !== 'playing';
+  els.endGame.disabled = !isInRoom || view.phase !== 'playing';
+  els.leaveRoom.disabled = !isInRoom;
 }
 
 function playerName() {

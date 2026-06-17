@@ -224,13 +224,47 @@ label {
 }
 
 .player-row,
-.status-strip > div,
-.end-game-button {
+.status-strip > div {
   display: flex;
   justify-content: space-between;
   border-radius: 8px;
   background: var(--parchment-deep);
   padding: 10px 12px;
+}
+
+.room-action-bar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin: 0 0 10px;
+  border: 1px solid rgba(255, 219, 160, 0.24);
+  border-radius: 10px;
+  background: rgba(8, 19, 15, 0.82);
+  padding: 8px;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 236, 190, 0.08),
+    0 8px 18px rgba(0, 0, 0, 0.2);
+}
+
+.room-action-bar button {
+  min-width: 118px;
+  min-height: 46px;
+}
+
+.room-action-bar .danger-action {
+  background:
+    linear-gradient(rgba(126, 43, 30, 0.86), rgba(79, 24, 18, 0.94)),
+    var(--ui-button),
+    #7a2f22;
+  background-size: auto, cover, auto;
+}
+
+.room-action-bar .secondary-action {
+  background:
+    linear-gradient(rgba(46, 54, 50, 0.62), rgba(24, 30, 28, 0.88)),
+    var(--ui-button),
+    #2d3732;
+  background-size: auto, cover, auto;
 }
 
 .player-row.is-first-player {
@@ -335,7 +369,7 @@ label {
 
 .status-strip {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
   grid-column: 1 / -1;
   margin-bottom: 0;
@@ -368,24 +402,6 @@ label {
 
 .status-strip strong {
   font-size: 18px;
-}
-
-.end-game-button {
-  align-items: center;
-  justify-content: center;
-  min-width: 82px;
-  min-height: auto;
-  border: 1px solid rgba(255, 224, 164, 0.42);
-  background:
-    linear-gradient(rgba(116, 42, 30, 0.82), rgba(76, 24, 18, 0.9)),
-    var(--ui-button),
-    #7a2f22;
-  background-size: auto, cover, auto;
-  color: #fff4df;
-  padding: 8px 14px;
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 236, 190, 0.08),
-    0 6px 12px rgba(0, 0, 0, 0.22);
 }
 
 .section-head {
@@ -1229,14 +1245,21 @@ label {
     padding: 8px;
   }
 
-  .status-strip > div,
-  .end-game-button {
+  .status-strip > div {
     padding: 4px 7px;
   }
 
-  .end-game-button {
-    min-width: 58px;
+  .room-action-bar {
+    gap: 6px;
+    margin-bottom: 6px;
+    padding: 5px;
+  }
+
+  .room-action-bar button {
+    min-width: 84px;
+    min-height: 34px;
     font-size: 12px;
+    padding: 6px 9px;
   }
 
   .status-strip strong {
@@ -1486,8 +1509,7 @@ label {
     padding: 0;
   }
 
-  .status-strip > div,
-  .end-game-button {
+  .status-strip > div {
     min-height: 56px;
     border-radius: 8px;
     border: 1px solid rgba(255, 219, 160, 0.18);
@@ -1498,14 +1520,22 @@ label {
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
   }
 
-  .end-game-button {
-    grid-column: 1 / -1;
+  .room-action-bar {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 8px;
+    border-color: rgba(255, 219, 160, 0.18);
+    border-radius: 8px;
+    background: rgba(9, 18, 14, 0.88);
+    padding: 7px;
+  }
+
+  .room-action-bar button {
+    width: 100%;
+    min-width: 0;
     min-height: 42px;
-    background:
-      linear-gradient(rgba(125, 41, 31, 0.88), rgba(75, 24, 18, 0.92)),
-      var(--ui-button),
-      #7a2f22;
-    background-size: auto, cover, auto;
+    padding: 8px 10px;
   }
 
   .status-strip span {

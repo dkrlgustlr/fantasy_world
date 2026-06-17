@@ -28,11 +28,17 @@ test('score screen shows final hand card images and can restart the same room', 
   assert.match(app, /\/assets\/cards\/full\/\$\{imageId\}\.png/);
 });
 
-test('game screen has a real end button wired to manual scoring', () => {
+test('game screen has a dedicated action bar for end and leave actions', () => {
+  assert.match(html, /id="roomActions"/);
   assert.match(html, /id="endGame"/);
   assert.match(html, />종료<\/button>/);
+  assert.match(html, /id="leaveRoom"/);
+  assert.match(html, />방 나가기<\/button>/);
+  assert.match(app, /roomActions: document\.querySelector\('#roomActions'\)/);
   assert.match(app, /endGame: document\.querySelector\('#endGame'\)/);
+  assert.match(app, /leaveRoom: document\.querySelector\('#leaveRoom'\)/);
   assert.match(app, /els\.endGame\.addEventListener\('click', \(\) => postAction\('end'\)\)/);
+  assert.match(app, /els\.leaveRoom\.addEventListener\('click', leaveRoom\)/);
 });
 
 test('score screen card previews open the detail overlay', () => {

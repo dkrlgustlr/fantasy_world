@@ -69,3 +69,24 @@ test('persistent game store saves manual end state for scoring', async () => {
   assert.equal(restored.phase, 'ended');
   assert.equal(restored.you.hand.length, 7);
 });
+
+test('persistent game store saves leave state for the remaining player', async () => {
+  const repository = createMemoryRoomRepository();
+  const firstStore = createPersistentGameStore(cards, { repository, shuffle: false, random: () => 0 });
+  const host = await firstStore.createRoom('Persistent Leave Host');
+  const guest = await firstStore.joinRoom(host.code, 'Persistent Leave Guest');
+  await firstStore.startGame(host.code, host.playerToken);
+  await firstStore.finishCoinToss(host.code, host.playerToken);
+
+  const result = await firstStore.leaveRoom(host.code, guest.playerToken);
+
+  assert.deepEqual(result, { left: true, code: host.code, deleted: false });
+
+  const secondStore = createPersistentGameStore(cards, { repository, shuffle: false });
+  const restored = await secondStore.getView(host.code, host.playerToken);
+
+  assert.equal(restored.phase, 'waiting');
+  assert.equal(restored.players.length, 1);
+  assert.equal(restored.players[0].id, 'p1');
+  assert.equal(restored.deckCount, 53);
+});

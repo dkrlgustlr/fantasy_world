@@ -152,6 +152,27 @@ test('can manually end an in-progress game for scoring', () => {
   assert.equal(ended.you.hand.length, 7);
 });
 
+test('leaving an active room resets the remaining player to the lobby', () => {
+  const store = createGameStore(cards, { shuffle: false, random: () => 0 });
+  const host = store.createRoom('Leave Host');
+  const guest = store.joinRoom(host.code, 'Leave Guest');
+  store.startGame(host.code, host.playerToken);
+  store.finishCoinToss(host.code, host.playerToken);
+
+  const result = store.leaveRoom(host.code, guest.playerToken);
+  const hostView = store.getView(host.code, host.playerToken);
+  const newGuest = store.joinRoom(host.code, 'New Guest');
+
+  assert.deepEqual(result, { left: true, code: host.code, deleted: false });
+  assert.equal(hostView.phase, 'waiting');
+  assert.equal(hostView.players.length, 1);
+  assert.equal(hostView.players[0].id, 'p1');
+  assert.equal(hostView.you.hand.length, 0);
+  assert.equal(hostView.deckCount, 53);
+  assert.equal(newGuest.players.length, 2);
+  assert.equal(newGuest.players[1].id, 'p2');
+});
+
 test('ends at ten discarded cards and totals manual scores', () => {
   const store = createGameStore(cards, { shuffle: false, random: () => 0 });
   const host = store.createRoom('호스트');

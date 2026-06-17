@@ -137,6 +137,18 @@ export function createGameStore(cards = [], options = {}) {
       return playerView(room, player);
     },
 
+    leaveRoom(code, playerToken) {
+      const room = requireRoom(rooms, code);
+      requirePlayer(room, playerToken);
+      removePlayerFromRoom(room, playerToken);
+      if (room.players.length === 0) {
+        rooms.delete(room.code);
+        return { left: true, code: room.code, deleted: true };
+      }
+      resetRoomToLobby(room, cards, shuffle);
+      return { left: true, code: room.code, deleted: false };
+    },
+
     endGame(code, playerToken) {
       const room = requireRoom(rooms, code);
       const player = requirePlayer(room, playerToken);
@@ -353,6 +365,22 @@ export function createPersistentGameStore(cards = [], options = {}) {
       });
     },
 
+    async leaveRoom(code, playerToken) {
+      const normalizedCode = String(code || '').toUpperCase();
+      return withRoomLock(locks, normalizedCode, async () => {
+        const room = await loadRoom(repository, normalizedCode);
+        requirePlayer(room, playerToken);
+        removePlayerFromRoom(room, playerToken);
+        if (room.players.length === 0) {
+          await repository.deleteRoom(normalizedCode);
+          return { left: true, code: normalizedCode, deleted: true };
+        }
+        resetRoomToLobby(room, cards, shuffle);
+        await repository.saveRoom(room);
+        return { left: true, code: normalizedCode, deleted: false };
+      });
+    },
+
     async endGame(code, playerToken) {
       return mutateRoom(repository, locks, code, (room) => {
         const player = requirePlayer(room, playerToken);
@@ -500,6 +528,25 @@ function endGameRoom(room) {
   room.phase = 'ended';
   room.currentPlayerId = null;
   room.drawnThisTurn = false;
+}
+
+function removePlayerFromRoom(room, playerToken) {
+  room.players = room.players.filter((player) => player.token !== playerToken);
+}
+
+function resetRoomToLobby(room, cards, shuffle) {
+  room.players = room.players.map((player, index) => ({
+    id: `p${index + 1}`,
+    name: player.name,
+    token: player.token
+  }));
+  room.deck = shuffle(cards.map((card) => ({ ...card })));
+  room.discardPile = [];
+  room.phase = 'waiting';
+  room.currentPlayerId = null;
+  room.coinToss = null;
+  room.drawnThisTurn = false;
+  room.scores = {};
 }
 
 function publicCoinToss(room) {
