@@ -17,8 +17,7 @@ const els = {
   soloTest: document.querySelector('#soloTest'),
   openRules: document.querySelector('#openRules'),
   testControls: document.querySelector('#testControls'),
-  seatP1: document.querySelector('#seatP1'),
-  seatP2: document.querySelector('#seatP2'),
+  seatButtons: [...document.querySelectorAll('[data-test-seat]')],
   roomActions: document.querySelector('#roomActions'),
   leaveRoom: document.querySelector('#leaveRoom'),
   lobbyCode: document.querySelector('#lobbyCode'),
@@ -76,8 +75,9 @@ els.createRoom.addEventListener('click', createRoom);
 els.joinRoom.addEventListener('click', joinRoom);
 els.soloTest.addEventListener('click', startSoloTest);
 els.openRules.addEventListener('click', openRulesOverlay);
-els.seatP1.addEventListener('click', () => switchTestSeat('p1'));
-els.seatP2.addEventListener('click', () => switchTestSeat('p2'));
+els.seatButtons.forEach((button) => {
+  button.addEventListener('click', () => switchTestSeat(button.dataset.testSeat));
+});
 els.startGame.addEventListener('click', () => postAction('start'));
 els.drawDeck.addEventListener('click', () => postAction('draw-deck'));
 els.leaveRoom.addEventListener('click', leaveRoom);
@@ -166,13 +166,13 @@ async function joinRoom() {
 async function startSoloTest() {
   const result = await request('/api/test/solo-room', {
     method: 'POST',
-    body: { name: playerName() }
+    body: { name: playerName(), playerCount: 6 }
   });
   setTestTokens(result.playerTokens);
   setSession(result.code, result.playerTokens.p1);
   connectEvents();
   await refreshView();
-  showMessage('혼자 테스트 모드입니다. 위에서 1P/2P를 바꿔가며 확인하세요.');
+  showMessage('혼자 테스트 모드입니다. 위에서 1P~6P를 바꿔가며 확인하세요.');
 }
 
 async function switchTestSeat(playerId) {
@@ -295,9 +295,13 @@ function render() {
 function renderLobby(view) {
   els.lobbyCode.textContent = view.code;
   els.lobbyPlayers.innerHTML = view.players
-    .map((player) => `<div class="player-row"><span>${escapeHtml(player.name)}</span><strong>${player.isYou ? '나' : '상대'}</strong></div>`)
+    .map((player) => `<div class="player-row"><span>${escapeHtml(player.name)}</span><strong>${player.isYou ? '나' : player.isHost ? '방장' : '참가자'}</strong></div>`)
     .join('');
-  els.startGame.disabled = view.players.length !== 2;
+  const canStart = view.you?.isHost && view.players.length >= 2 && view.players.length <= 6;
+  els.startGame.disabled = !canStart;
+  els.startGame.textContent = view.players.length < 2
+    ? '2명부터 시작 가능'
+    : view.you?.isHost ? `선 정하기 (${view.players.length}인)` : '방장만 시작 가능';
 }
 
 function renderCoinToss(view) {
@@ -377,20 +381,34 @@ function renderGame(view) {
       selected: state.selectedCardId === card.id
     })).join('')
     : '<p>아직 버린 카드가 없습니다.</p>';
-  const opponent = view.players.find((player) => !player.isYou);
-  els.opponentInfo.textContent = opponent ? `${opponent.name}: ${opponent.handCount}장` : '-';
-  renderOpponentHand(opponent);
+  renderOpponentPlayers(view);
   bindCardButtons();
   renderSelectedCardActions(view, isMyTurn);
   renderScore(view);
 }
 
-function renderOpponentHand(opponent) {
+function renderOpponentPlayers(view) {
   if (!els.opponentHand) return;
-  const handCount = opponent?.handCount || 0;
-  els.opponentHand.innerHTML = Array.from({ length: handCount }, (_, index) => `
-    <span class="opponent-card-back" aria-hidden="true" style="--card-index: ${index}"></span>
-  `).join('');
+  const opponents = view.players.filter((player) => !player.isYou);
+  const currentTurnName = playerNameById(view, view.currentPlayerId);
+  els.opponentInfo.textContent = opponents.length
+    ? `${opponents.length}명 / 현재 턴: ${currentTurnName || '-'}`
+    : '-';
+  els.opponentHand.innerHTML = opponents.map((opponent) => {
+    const isCurrentTurn = opponent.id === view.currentPlayerId;
+    const backs = Array.from({ length: opponent.handCount || 0 }, (_, index) => `
+      <span class="opponent-card-back" aria-hidden="true" style="--card-index: ${index}"></span>
+    `).join('');
+    return `
+      <article class="opponent-player-card ${isCurrentTurn ? 'is-current-turn' : ''}">
+        <div class="opponent-player-head">
+          <strong>${escapeHtml(opponent.name)}</strong>
+          <span>${opponent.handCount || 0}장</span>
+        </div>
+        <div class="opponent-mini-hand">${backs}</div>
+      </article>
+    `;
+  }).join('');
 }
 
 function renderScore(view) {
@@ -436,11 +454,35 @@ function renderScore(view) {
   renderScoreDiscardCards(view);
   const score = view.scores?.[view.you.id];
   els.scoreStatus.textContent = score ? `내 제출 점수: ${score.total}` : '카드별 보너스/페널티를 직접 입력하세요.';
-  const entries = Object.entries(view.scores || {});
-  els.scoreSummary.innerHTML = entries.map(([playerId, result]) => {
-    const player = view.players.find((candidate) => candidate.id === playerId);
-    return `<div>${escapeHtml(player?.name || playerId)}: ${result.total}점</div>`;
-  }).join('');
+  renderScoreSummary(view);
+}
+
+function renderScoreSummary(view) {
+  const rows = view.players.map((player) => {
+    const result = view.scores?.[player.id];
+    return {
+      player,
+      result,
+      submitted: Boolean(result)
+    };
+  });
+  const allSubmitted = rows.length > 0 && rows.every((row) => row.submitted);
+  const orderedRows = allSubmitted
+    ? [...rows].sort((a, b) => b.result.total - a.result.total)
+    : rows;
+  const winnerLine = view.winner
+    ? `<div class="score-summary-winner">${view.winner.playerId ? `${escapeHtml(view.winner.name)} 승리` : '무승부'} · ${view.winner.total}점</div>`
+    : '';
+
+  els.scoreSummary.innerHTML = `
+    ${winnerLine}
+    ${orderedRows.map((row, index) => `
+      <div class="score-summary-row ${row.submitted ? 'is-submitted' : 'is-pending'}">
+        <span>${allSubmitted ? `${index + 1}위 · ` : ''}${escapeHtml(row.player.name)}${row.player.isYou ? ' · 나' : ''}</span>
+        <strong>${row.submitted ? `제출 완료 · ${row.result.total}점` : '계산 중'}</strong>
+      </div>
+    `).join('')}
+  `;
 }
 
 function readScoreDrafts() {
@@ -819,10 +861,13 @@ function renderTestControls(view) {
   const isTestMode = Boolean(state.testTokens && view?.you);
   els.testControls.classList.toggle('hidden', !isTestMode);
   if (!isTestMode) return;
-  els.seatP1.classList.toggle('active', view.you.id === 'p1');
-  els.seatP2.classList.toggle('active', view.you.id === 'p2');
-  els.seatP1.disabled = view.you.id === 'p1';
-  els.seatP2.disabled = view.you.id === 'p2';
+  els.seatButtons.forEach((button) => {
+    const playerId = button.dataset.testSeat;
+    const hasToken = Boolean(state.testTokens?.[playerId]);
+    button.hidden = !hasToken;
+    button.classList.toggle('active', view.you.id === playerId);
+    button.disabled = !hasToken || view.you.id === playerId;
+  });
 }
 
 function renderRoomActions(view) {

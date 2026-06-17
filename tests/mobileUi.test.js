@@ -10,14 +10,28 @@ test('mobile game UI does not use sticky panels or headers', () => {
   assert.doesNotMatch(css, /position:\s*sticky/);
 });
 
-test('opponent panel renders hidden hand card backs', () => {
+test('opponent panel renders every other player as hidden hand groups', () => {
   assert.match(html, /id="opponentHand"/);
   assert.match(app, /opponentHand:\s*document\.querySelector\('#opponentHand'\)/);
-  assert.match(app, /function renderOpponentHand/);
+  assert.match(app, /function renderOpponentPlayers/);
+  assert.match(app, /view\.players\.filter\(\(player\) => !player\.isYou\)/);
+  assert.match(app, /opponent-player-card/);
+  assert.match(app, /is-current-turn/);
   assert.match(app, /opponent-card-back/);
   assert.match(css, /\.opponent-hand/);
+  assert.match(css, /\.opponent-player-card/);
+  assert.match(css, /\.opponent-player-card\.is-current-turn/);
   assert.match(css, /\.opponent-card-back/);
   assert.match(css, /deck-back\.png/);
+});
+
+test('solo test controls can switch between six seats', () => {
+  for (let playerNumber = 1; playerNumber <= 6; playerNumber += 1) {
+    assert.match(html, new RegExp(`data-test-seat="p${playerNumber}"`));
+  }
+  assert.match(app, /seatButtons:\s*\[\.\.\.document\.querySelectorAll\('\[data-test-seat\]'\)\]/);
+  assert.match(app, /playerCount:\s*6/);
+  assert.match(app, /switchTestSeat\(button\.dataset\.testSeat\)/);
 });
 
 test('selected card actions render as one shared button pair', () => {

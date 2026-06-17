@@ -1,3 +1,6 @@
+const MIN_PLAYERS = 2;
+const MAX_PLAYERS = 6;
+
 export function createGameStore(cards = [], options = {}) {
   const rooms = new Map();
   const shuffle = options.shuffle === false ? (deck) => deck : shuffleDeck;
@@ -33,7 +36,7 @@ export function createGameStore(cards = [], options = {}) {
 
     joinRoom(code, playerName) {
       const room = requireRoom(rooms, code);
-      if (room.players.length >= 2) {
+      if (room.players.length >= MAX_PLAYERS) {
         throw new Error('방이 가득 찼습니다.');
       }
       const player = {
@@ -48,23 +51,12 @@ export function createGameStore(cards = [], options = {}) {
       };
     },
 
-    createSoloTestRoom(playerName) {
+    createSoloTestRoom(playerName, playerCount = MAX_PLAYERS) {
       const firstPlayerName = playerName || '테스터';
       const code = createRoomCode(rooms);
       const room = {
         code,
-        players: [
-          {
-            id: 'p1',
-            name: firstPlayerName,
-            token: createToken()
-          },
-          {
-            id: 'p2',
-            name: `${firstPlayerName} 2P`,
-            token: createToken()
-          }
-        ],
+        players: createTestPlayers(firstPlayerName, playerCount),
         deck: shuffle(cards.map((card) => ({ ...card }))),
         discardPile: [],
         phase: 'playing',
@@ -79,10 +71,7 @@ export function createGameStore(cards = [], options = {}) {
       rooms.set(code, room);
       return {
         ...publicRoomSummary(room),
-        playerTokens: {
-          p1: room.players[0].token,
-          p2: room.players[1].token
-        }
+        playerTokens: playerTokensFor(room.players)
       };
     },
 
@@ -95,8 +84,9 @@ export function createGameStore(cards = [], options = {}) {
     startGame(code, playerToken) {
       const room = requireRoom(rooms, code);
       const player = requirePlayer(room, playerToken);
-      if (room.players.length !== 2) {
-        throw new Error('두 명이 모여야 시작할 수 있습니다.');
+      requireHost(player);
+      if (room.players.length < MIN_PLAYERS || room.players.length > MAX_PLAYERS) {
+        throw new Error('2명 이상 6명 이하로 모여야 시작할 수 있습니다.');
       }
       if (room.phase !== 'waiting') {
         throw new Error('이미 시작한 게임입니다.');
@@ -250,7 +240,7 @@ export function createPersistentGameStore(cards = [], options = {}) {
 
     async joinRoom(code, playerName) {
       return mutateRoom(repository, locks, code, (room) => {
-        if (room.players.length >= 2) {
+        if (room.players.length >= MAX_PLAYERS) {
           throw new Error('방이 가득 찼습니다.');
         }
         const player = {
@@ -266,23 +256,12 @@ export function createPersistentGameStore(cards = [], options = {}) {
       });
     },
 
-    async createSoloTestRoom(playerName) {
+    async createSoloTestRoom(playerName, playerCount = MAX_PLAYERS) {
       const firstPlayerName = playerName || '테스트';
       const code = await createRoomCodeAsync(repository);
       const room = {
         code,
-        players: [
-          {
-            id: 'p1',
-            name: firstPlayerName,
-            token: createToken()
-          },
-          {
-            id: 'p2',
-            name: `${firstPlayerName} 2P`,
-            token: createToken()
-          }
-        ],
+        players: createTestPlayers(firstPlayerName, playerCount),
         deck: shuffle(cards.map((card) => ({ ...card }))),
         discardPile: [],
         phase: 'playing',
@@ -297,10 +276,7 @@ export function createPersistentGameStore(cards = [], options = {}) {
       await repository.saveRoom(room);
       return {
         ...publicRoomSummary(room),
-        playerTokens: {
-          p1: room.players[0].token,
-          p2: room.players[1].token
-        }
+        playerTokens: playerTokensFor(room.players)
       };
     },
 
@@ -313,8 +289,9 @@ export function createPersistentGameStore(cards = [], options = {}) {
     async startGame(code, playerToken) {
       return mutateRoom(repository, locks, code, (room) => {
         const player = requirePlayer(room, playerToken);
-        if (room.players.length !== 2) {
-          throw new Error('두 명이 모여야 시작할 수 있습니다.');
+        requireHost(player);
+        if (room.players.length < MIN_PLAYERS || room.players.length > MAX_PLAYERS) {
+          throw new Error('2명 이상 6명 이하로 모여야 시작할 수 있습니다.');
         }
         if (room.phase !== 'waiting') {
           throw new Error('이미 시작한 게임입니다.');
@@ -452,15 +429,18 @@ function playerView(room, player) {
     you: {
       id: player.id,
       name: player.name,
+      isHost: player.id === 'p1',
       hand: player.hand ? [...player.hand] : []
     },
     players: room.players.map((roomPlayer) => ({
       id: roomPlayer.id,
       name: roomPlayer.name,
       handCount: roomPlayer.hand ? roomPlayer.hand.length : 0,
+      isHost: roomPlayer.id === 'p1',
       isYou: roomPlayer.id === player.id
     })),
-    scores: room.scores
+    scores: room.scores,
+    winner: getWinner(room)
   };
 }
 
@@ -474,7 +454,8 @@ function publicRoomSummary(room) {
     coinToss: publicCoinToss(room),
     players: room.players.map((player) => ({
       id: player.id,
-      name: player.name
+      name: player.name,
+      isHost: player.id === 'p1'
     }))
   };
 }
@@ -586,6 +567,12 @@ function requirePlayer(room, playerToken) {
   return player;
 }
 
+function requireHost(player) {
+  if (player.id !== 'p1') {
+    throw new Error('방장만 게임을 시작할 수 있습니다.');
+  }
+}
+
 function requireTurnPlayer(room, playerToken) {
   if (room.phase !== 'playing') {
     throw new Error('진행 중인 게임이 아닙니다.');
@@ -637,10 +624,37 @@ function getWinner(room) {
       total: room.scores[player.id].total
     }))
     .sort((a, b) => b.total - a.total);
+  if (ranked.length === 0) {
+    return null;
+  }
+  if (ranked.length === 1) {
+    return ranked[0];
+  }
   if (ranked[0].total === ranked[1].total) {
     return { playerId: null, name: '무승부', total: ranked[0].total };
   }
   return ranked[0];
+}
+
+function createTestPlayers(firstPlayerName, playerCount) {
+  const count = normalizePlayerCount(playerCount);
+  return Array.from({ length: count }, (_, index) => ({
+    id: `p${index + 1}`,
+    name: index === 0 ? firstPlayerName : `${firstPlayerName} ${index + 1}P`,
+    token: createToken()
+  }));
+}
+
+function normalizePlayerCount(playerCount) {
+  const count = Number(playerCount || MAX_PLAYERS);
+  if (!Number.isInteger(count) || count < MIN_PLAYERS || count > MAX_PLAYERS) {
+    throw new Error('테스트 인원은 2명 이상 6명 이하로 선택해야 합니다.');
+  }
+  return count;
+}
+
+function playerTokensFor(players) {
+  return Object.fromEntries(players.map((player) => [player.id, player.token]));
 }
 
 function createRoomCode(rooms) {

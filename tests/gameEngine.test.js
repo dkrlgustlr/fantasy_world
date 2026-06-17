@@ -17,16 +17,21 @@ test('creates a room with the 53-card base deck', () => {
   assert.equal(room.players[0].name, '첫 플레이어');
 });
 
-test('allows exactly two players to join a room', () => {
+test('allows up to six players to join a room', () => {
   const store = createGameStore(cards, { shuffle: false, random: () => 0 });
-  const created = store.createRoom('호스트');
-  const joined = store.joinRoom(created.code, '게스트');
+  const created = store.createRoom('Host');
+  const playerTokens = [created.playerToken];
 
   assert.equal(created.playerToken.length > 8, true);
-  assert.equal(joined.playerToken.length > 8, true);
-  assert.notEqual(created.playerToken, joined.playerToken);
-  assert.equal(joined.players.length, 2);
-  assert.throws(() => store.joinRoom(created.code, '세 번째'), /방이 가득 찼습니다/);
+  for (let playerNumber = 2; playerNumber <= 6; playerNumber += 1) {
+    const joined = store.joinRoom(created.code, `Player ${playerNumber}`);
+    playerTokens.push(joined.playerToken);
+    assert.equal(joined.playerToken.length > 8, true);
+    assert.equal(joined.players.length, playerNumber);
+  }
+
+  assert.equal(new Set(playerTokens).size, 6);
+  assert.throws(() => store.joinRoom(created.code, 'Player 7'), /방이 가득 찼습니다/);
 });
 
 test('returns a player-scoped room view', () => {
@@ -66,28 +71,87 @@ test('starts a two-player game by flipping a coin for the first turn', () => {
   assert.equal(afterCoin.currentPlayerId, 'p2');
 });
 
-test('creates a started solo test room with both player tokens', () => {
+test('only the host can start a waiting room', () => {
   const store = createGameStore(cards, { shuffle: false, random: () => 0 });
-  const solo = store.createSoloTestRoom('테스터');
+  const host = store.createRoom('Host');
+  const guest = store.joinRoom(host.code, 'Guest');
+
+  assert.throws(() => store.startGame(host.code, guest.playerToken), /방장만/);
+
+  const started = store.startGame(host.code, host.playerToken);
+  assert.equal(started.phase, 'flipping');
+});
+
+test('starts a six-player game and keeps every opponent hand hidden', () => {
+  const store = createGameStore(cards, { shuffle: false, random: () => 0.99 });
+  const host = store.createRoom('Host');
+  const tokens = { p1: host.playerToken };
+  for (let playerNumber = 2; playerNumber <= 6; playerNumber += 1) {
+    const joined = store.joinRoom(host.code, `Player ${playerNumber}`);
+    tokens[`p${playerNumber}`] = joined.playerToken;
+  }
+
+  const started = store.startGame(host.code, host.playerToken);
+  const hostView = store.getView(host.code, host.playerToken);
+  const sixthView = store.getView(host.code, tokens.p6);
+
+  assert.equal(started.phase, 'flipping');
+  assert.equal(hostView.players.length, 6);
+  assert.equal(hostView.you.hand.length, 7);
+  assert.equal(sixthView.you.hand.length, 7);
+  assert.equal(hostView.players.filter((player) => !player.isYou).length, 5);
+  assert.equal(hostView.players.every((player) => player.hand === undefined), true);
+  assert.equal(hostView.players.every((player) => player.handCount === 7), true);
+  assert.equal(hostView.deckCount, 11);
+  assert.equal(hostView.coinToss.winnerPlayerId, 'p6');
+
+  const afterCoin = store.finishCoinToss(host.code, host.playerToken);
+  assert.equal(afterCoin.phase, 'playing');
+  assert.equal(afterCoin.currentPlayerId, 'p6');
+});
+
+test('six-player turns advance around the table', () => {
+  const store = createGameStore(cards, { shuffle: false, random: () => 0.99 });
+  const host = store.createRoom('Host');
+  const tokens = { p1: host.playerToken };
+  for (let playerNumber = 2; playerNumber <= 6; playerNumber += 1) {
+    const joined = store.joinRoom(host.code, `Player ${playerNumber}`);
+    tokens[`p${playerNumber}`] = joined.playerToken;
+  }
+  store.startGame(host.code, host.playerToken);
+  store.finishCoinToss(host.code, host.playerToken);
+
+  const sixthDraw = store.drawFromDeck(host.code, tokens.p6);
+  const afterSixthDiscard = store.discardCard(host.code, tokens.p6, sixthDraw.you.hand[0].id);
+  assert.equal(afterSixthDiscard.currentPlayerId, 'p1');
+
+  const firstDraw = store.drawFromDeck(host.code, tokens.p1);
+  const afterFirstDiscard = store.discardCard(host.code, tokens.p1, firstDraw.you.hand[0].id);
+  assert.equal(afterFirstDiscard.currentPlayerId, 'p2');
+});
+
+test('creates a started solo test room with six player tokens', () => {
+  const store = createGameStore(cards, { shuffle: false, random: () => 0 });
+  const solo = store.createSoloTestRoom('Test', 6);
 
   assert.equal(solo.phase, 'playing');
-  assert.equal(solo.players.length, 2);
-  assert.equal(solo.players[0].name, '테스터');
-  assert.equal(solo.players[1].name, '테스터 2P');
+  assert.equal(solo.players.length, 6);
+  assert.equal(solo.players[0].name, 'Test');
+  assert.equal(solo.players[5].name, 'Test 6P');
   assert.equal(solo.playerTokens.p1.length > 8, true);
-  assert.equal(solo.playerTokens.p2.length > 8, true);
-  assert.notEqual(solo.playerTokens.p1, solo.playerTokens.p2);
+  assert.equal(solo.playerTokens.p6.length > 8, true);
+  assert.equal(new Set(Object.values(solo.playerTokens)).size, 6);
 
   const playerOneView = store.getView(solo.code, solo.playerTokens.p1);
-  const playerTwoView = store.getView(solo.code, solo.playerTokens.p2);
+  const playerSixView = store.getView(solo.code, solo.playerTokens.p6);
 
   assert.equal(playerOneView.you.id, 'p1');
-  assert.equal(playerTwoView.you.id, 'p2');
+  assert.equal(playerSixView.you.id, 'p6');
   assert.equal(playerOneView.you.hand.length, 7);
-  assert.equal(playerTwoView.you.hand.length, 7);
-  assert.equal(playerOneView.players.find((player) => !player.isYou).hand, undefined);
-  assert.equal(playerTwoView.players.find((player) => !player.isYou).hand, undefined);
-  assert.equal(playerOneView.deckCount, 39);
+  assert.equal(playerSixView.you.hand.length, 7);
+  assert.equal(playerOneView.players.every((player) => player.hand === undefined), true);
+  assert.equal(playerSixView.players.every((player) => player.hand === undefined), true);
+  assert.equal(playerOneView.deckCount, 11);
   assert.equal(playerOneView.currentPlayerId, 'p1');
 });
 
@@ -185,6 +249,41 @@ test('ends at ten discarded cards and totals manual scores', () => {
   ]);
   assert.equal(guestScore.scores.p2.total, 20);
   assert.equal(guestScore.winner.playerId, 'p2');
+});
+
+test('score views wait for every multiplayer score and then expose the winner', () => {
+  const store = createGameStore(cards, { shuffle: false, random: () => 0 });
+  const host = store.createRoom('Host');
+  const second = store.joinRoom(host.code, 'Second');
+  const third = store.joinRoom(host.code, 'Third');
+  const tokens = {
+    p1: host.playerToken,
+    p2: second.playerToken,
+    p3: third.playerToken
+  };
+  store.startGame(host.code, host.playerToken);
+  store.finishCoinToss(host.code, host.playerToken);
+
+  for (let turn = 0; turn < 10; turn += 1) {
+    const currentView = store.getView(host.code, tokens[store.getView(host.code, host.playerToken).currentPlayerId]);
+    const viewAfterDraw = store.drawFromDeck(host.code, tokens[currentView.you.id]);
+    store.discardCard(host.code, tokens[currentView.you.id], viewAfterDraw.you.hand[0].id);
+  }
+
+  const firstScore = store.submitScore(host.code, host.playerToken, [
+    { cardId: 'a', base: 10, bonusPenalty: 0 }
+  ]);
+  const secondScore = store.submitScore(host.code, second.playerToken, [
+    { cardId: 'b', base: 30, bonusPenalty: 0 }
+  ]);
+  const thirdScore = store.submitScore(host.code, third.playerToken, [
+    { cardId: 'c', base: 20, bonusPenalty: 0 }
+  ]);
+
+  assert.equal(firstScore.winner, null);
+  assert.equal(secondScore.winner, null);
+  assert.equal(thirdScore.winner.playerId, 'p2');
+  assert.equal(store.getView(host.code, host.playerToken).winner.playerId, 'p2');
 });
 
 test('keeps score manual by not including automatic score previews', () => {

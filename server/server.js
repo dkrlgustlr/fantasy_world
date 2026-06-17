@@ -28,7 +28,7 @@ const server = http.createServer(async (req, res) => {
     }
     if (url.pathname === '/api/test/solo-room' && req.method === 'POST') {
       const body = await readJson(req);
-      const result = await store.createSoloTestRoom(body.name);
+      const result = await store.createSoloTestRoom(body.name, body.playerCount);
       return sendJson(res, 201, result);
     }
     const roomMatch = url.pathname.match(/^\/api\/rooms\/([^/]+)(?:\/([^/]+))?$/);

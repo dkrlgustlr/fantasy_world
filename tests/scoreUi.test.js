@@ -46,6 +46,17 @@ test('score screen can reveal discarded cards for end-game choices', () => {
   assert.match(app, /openCardDetail\(discardButton\.dataset\.scoreDiscardDetail\)/);
 });
 
+test('score screen shows every player score status in multiplayer rooms', () => {
+  assert.match(app, /function renderScoreSummary/);
+  assert.match(app, /view\.players\.map/);
+  assert.match(app, /score-summary-row/);
+  assert.match(app, /계산 중/);
+  assert.match(app, /제출 완료/);
+  assert.match(app, /view\.winner/);
+  assert.match(css, /\.score-summary-row/);
+  assert.match(css, /\.score-summary-row\.is-submitted/);
+});
+
 test('score screen shows final hand card images and can restart the same room', () => {
   assert.match(html, /id="restartGame"/);
   assert.match(app, /restartGame: document\.querySelector\('#restartGame'\)/);
