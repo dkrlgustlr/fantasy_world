@@ -10,7 +10,7 @@ test('game exposes an image-based how-to-play manual', () => {
   assert.match(html, /id="openRules"/);
   assert.match(html, />게임 방법<\/button>/);
   assert.match(html, /id="rulesOverlay"/);
-  assert.match(html, /src="\/assets\/ui\/how-to-play\.svg"/);
+  assert.match(html, /src="\/assets\/ui\/how-to-play\.png"/);
   assert.match(app, /openRules: document\.querySelector\('#openRules'\)/);
   assert.match(app, /rulesOverlay: document\.querySelector\('#rulesOverlay'\)/);
   assert.match(app, /els\.openRules\.addEventListener\('click', openRulesOverlay\)/);
@@ -18,5 +18,5 @@ test('game exposes an image-based how-to-play manual', () => {
   assert.match(app, /function closeRulesOverlay/);
   assert.match(css, /\.rules-overlay/);
   assert.match(css, /\.rules-manual-image/);
-  assert.equal(existsSync('public/assets/ui/how-to-play.svg'), true);
+  assert.equal(existsSync('public/assets/ui/how-to-play.png'), true);
 });
