@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 630 420" role="img" aria-labelledby="g-book-of-changes-title g-book-of-changes-desc">
+  <title id="g-book-of-changes-title">변화의 책</title>
+  <desc id="g-book-of-changes-desc">유물 카드 변화의 책의 판타지 일러스트</desc>
+  <defs>
+    <linearGradient id="g-book-of-changes-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4a2607"/>
+      <stop offset="0.55" stop-color="#d97706"/>
+      <stop offset="1" stop-color="#f8d17c"/>
+    </linearGradient>
+    <radialGradient id="g-book-of-changes-glow" cx="50%" cy="38%" r="58%">
+      <stop offset="0" stop-color="#fff3b0" stop-opacity="0.7"/>
+      <stop offset="0.58" stop-color="#fff3b0" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="g-book-of-changes-soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="8" flood-color="#000" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <rect width="630" height="420" rx="26" fill="url(#g-book-of-changes-bg)"/>
+  <rect width="630" height="420" rx="26" fill="url(#g-book-of-changes-glow)"/>
+  <path d="M0 314 C86 286 154 328 242 302 C329 276 407 244 501 279 C553 298 591 287 630 270 L630 420 L0 420 Z" fill="#1a1512" opacity="0.32"/>
+  <path d="M0 356 C91 330 158 359 242 340 C340 317 395 299 486 330 C542 349 586 341 630 320 L630 420 L0 420 Z" fill="#070707" opacity="0.2"/>
+  <g opacity="0.95" transform="translate(0 0)"><path d="M159 139 C229 111 271 128 316 165 C361 128 403 111 472 139 V329 C404 303 363 315 316 352 C269 315 227 303 159 329 Z" fill="#f8d17c"/><path d="M316 165 V352 M197 179 C239 167 268 180 294 205 M339 205 C371 181 405 170 445 181" fill="none" stroke="#4a2607" stroke-width="10" stroke-linecap="round"/></g>
+  <g opacity="0.55" transform="translate(58 0)"><path d="M319 82 L345 173 L439 198 L348 225 L319 318 L289 225 L197 198 L290 173 Z" fill="#fff3b0"/><circle cx="470" cy="112" r="16" fill="#f8d17c"/><circle cx="185" cy="296" r="12" fill="#f8d17c"/></g>
+  <rect x="18" y="18" width="594" height="384" rx="20" fill="none" stroke="#fff3d0" stroke-opacity="0.22" stroke-width="4"/>
+</svg>

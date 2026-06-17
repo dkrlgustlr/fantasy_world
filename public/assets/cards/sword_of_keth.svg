@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 630 420" role="img" aria-labelledby="g-sword-of-keth-title g-sword-of-keth-desc">
+  <title id="g-sword-of-keth-title">케드의 검</title>
+  <desc id="g-sword-of-keth-desc">무기 카드 케드의 검의 판타지 일러스트</desc>
+  <defs>
+    <linearGradient id="g-sword-of-keth-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1f2937"/>
+      <stop offset="0.55" stop-color="#6b7280"/>
+      <stop offset="1" stop-color="#d8dee9"/>
+    </linearGradient>
+    <radialGradient id="g-sword-of-keth-glow" cx="50%" cy="38%" r="58%">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.7"/>
+      <stop offset="0.58" stop-color="#ffffff" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="g-sword-of-keth-soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="8" flood-color="#000" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <rect width="630" height="420" rx="26" fill="url(#g-sword-of-keth-bg)"/>
+  <rect width="630" height="420" rx="26" fill="url(#g-sword-of-keth-glow)"/>
+  <path d="M0 314 C86 286 154 328 242 302 C329 276 407 244 501 279 C553 298 591 287 630 270 L630 420 L0 420 Z" fill="#1a1512" opacity="0.32"/>
+  <path d="M0 356 C91 330 158 359 242 340 C340 317 395 299 486 330 C542 349 586 341 630 320 L630 420 L0 420 Z" fill="#070707" opacity="0.2"/>
+  <g opacity="0.95" transform="translate(0 0)"><path d="M319 62 L357 249 L319 309 L281 249 Z" fill="#d8dee9"/><path d="M247 292 H391 M319 300 V361" fill="none" stroke="#ffffff" stroke-width="19" stroke-linecap="round"/></g>
+  <g opacity="0.55" transform="translate(58 0)"><ellipse cx="316" cy="218" rx="171" ry="73" fill="none" stroke="#ffffff" stroke-width="11"/><ellipse cx="316" cy="218" rx="73" ry="171" fill="none" stroke="#d8dee9" stroke-width="8" opacity="0.72"/><circle cx="316" cy="218" r="25" fill="#ffffff"/></g>
+  <rect x="18" y="18" width="594" height="384" rx="20" fill="none" stroke="#fff3d0" stroke-opacity="0.22" stroke-width="4"/>
+</svg>

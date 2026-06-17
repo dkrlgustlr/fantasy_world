@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>판타지월드 MVP</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="app">
+      <section class="topbar">
+        <div>
+          <p class="eyebrow">Local Wi-Fi MVP</p>
+          <h1>판타지월드</h1>
+        </div>
+        <div id="connection" class="pill">대기</div>
+      </section>
+
+      <section id="testControls" class="test-controls hidden">
+        <span>테스트 좌석</span>
+        <div class="seat-buttons">
+          <button id="seatP1" type="button">1P</button>
+          <button id="seatP2" type="button">2P</button>
+        </div>
+      </section>
+
+      <section id="entry" class="panel">
+        <label>
+          닉네임
+          <input id="playerName" maxlength="12" placeholder="플레이어">
+        </label>
+        <div class="actions">
+          <button id="createRoom">방 만들기</button>
+        </div>
+        <label>
+          초대코드
+          <input id="roomCode" maxlength="6" placeholder="ABC123" autocapitalize="characters">
+        </label>
+        <div class="actions">
+          <button id="joinRoom">방 입장</button>
+        </div>
+        <div class="test-start">
+          <button id="soloTest" type="button">혼자 테스트 시작</button>
+          <p>한 브라우저에서 1P와 2P를 바꿔가며 플레이합니다.</p>
+        </div>
+      </section>
+
+      <section id="lobby" class="panel hidden">
+        <div class="room-code">
+          <span>초대코드</span>
+          <strong id="lobbyCode">------</strong>
+        </div>
+        <div id="lobbyPlayers" class="player-list"></div>
+        <button id="startGame">게임 시작</button>
+      </section>
+
+      <section id="game" class="hidden">
+        <div class="status-strip">
+          <div>
+            <span>방</span>
+            <strong id="gameCode">------</strong>
+          </div>
+          <div>
+            <span>덱</span>
+            <strong id="deckCount">0</strong>
+          </div>
+          <div>
+            <span>버림</span>
+            <strong id="discardCount">0</strong>
+          </div>
+        </div>
+
+        <section class="panel turn-panel">
+          <div class="section-head">
+            <h2>턴</h2>
+            <p id="turnText">-</p>
+          </div>
+          <button id="drawDeck">덱에서 가져오기</button>
+        </section>
+
+        <section class="panel discard-panel">
+          <div class="section-head">
+            <h2>버린 카드</h2>
+            <p>공개 영역</p>
+          </div>
+          <div id="discardPile" class="card-grid"></div>
+        </section>
+
+        <section class="panel hand-panel">
+          <div class="section-head">
+            <h2>내 손패</h2>
+            <p id="handCount">0장</p>
+          </div>
+          <div id="hand" class="card-grid"></div>
+          <div id="selectedCardActions" class="selected-card-actions" aria-label="선택 카드 행동">
+            <button id="selectedCardAction" class="card-control card-action-button" type="button" disabled>버리기</button>
+            <button id="selectedCardDetail" class="card-control detail-button" type="button" disabled>자세히</button>
+          </div>
+        </section>
+
+        <section class="panel opponent-panel">
+          <div class="section-head">
+            <h2>상대</h2>
+            <p id="opponentInfo">-</p>
+          </div>
+          <div id="opponentHand" class="opponent-hand" aria-label="상대 손패"></div>
+        </section>
+      </section>
+
+      <section id="score" class="panel hidden">
+        <div class="section-head">
+          <h2>수동 점수판</h2>
+          <p id="scoreStatus">카드별 보너스/페널티를 입력하세요.</p>
+        </div>
+        <div id="specialChoices" class="special-choices"></div>
+        <div id="scoreRows" class="score-rows"></div>
+        <div class="score-actions">
+          <button id="submitScore">점수 제출</button>
+          <button id="restartGame" type="button">같은 방 다시하기</button>
+        </div>
+        <div id="scoreSummary" class="score-summary"></div>
+      </section>
+
+      <p id="message" class="message"></p>
+
+      <section id="cardOverlay" class="card-overlay hidden" role="dialog" aria-modal="true" aria-label="카드 자세히 보기">
+        <div class="card-overlay-backdrop" data-close-card-detail></div>
+        <div class="card-overlay-panel">
+          <button id="closeCardOverlay" class="close-card-overlay" type="button">닫기</button>
+          <div id="cardOverlayBody"></div>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
