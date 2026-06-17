@@ -27,6 +27,7 @@ const els = {
   gameCode: document.querySelector('#gameCode'),
   deckCount: document.querySelector('#deckCount'),
   discardCount: document.querySelector('#discardCount'),
+  endGame: document.querySelector('#endGame'),
   turnText: document.querySelector('#turnText'),
   drawDeck: document.querySelector('#drawDeck'),
   discardPile: document.querySelector('#discardPile'),
@@ -69,6 +70,7 @@ els.seatP1.addEventListener('click', () => switchTestSeat('p1'));
 els.seatP2.addEventListener('click', () => switchTestSeat('p2'));
 els.startGame.addEventListener('click', () => postAction('start'));
 els.drawDeck.addEventListener('click', () => postAction('draw-deck'));
+els.endGame.addEventListener('click', () => postAction('end'));
 els.selectedCardAction.addEventListener('click', () => {
   const action = els.selectedCardAction.dataset.cardAction;
   const cardId = els.selectedCardAction.dataset.cardId;
@@ -294,6 +296,7 @@ function renderGame(view) {
   els.gameCode.textContent = view.code;
   els.deckCount.textContent = view.deckCount;
   els.discardCount.textContent = view.discardPile.length;
+  els.endGame.disabled = view.phase !== 'playing';
   const visibleCardIds = new Set([
     ...view.you.hand.map((card) => card.id),
     ...view.discardPile.map((card) => card.id)

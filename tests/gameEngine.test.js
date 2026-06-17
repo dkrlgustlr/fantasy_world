@@ -136,6 +136,22 @@ test('can draw a visible discard card', () => {
   assert.equal(guestDraw.discardPile.length, 0);
 });
 
+test('can manually end an in-progress game for scoring', () => {
+  const store = createGameStore(cards, { shuffle: false, random: () => 0 });
+  const host = store.createRoom('End Host');
+  const guest = store.joinRoom(host.code, 'End Guest');
+  store.startGame(host.code, host.playerToken);
+  store.finishCoinToss(host.code, host.playerToken);
+
+  const ended = store.endGame(host.code, guest.playerToken);
+
+  assert.equal(ended.phase, 'ended');
+  assert.equal(ended.currentPlayerId, null);
+  assert.equal(ended.drawnThisTurn, false);
+  assert.equal(ended.you.id, 'p2');
+  assert.equal(ended.you.hand.length, 7);
+});
+
 test('ends at ten discarded cards and totals manual scores', () => {
   const store = createGameStore(cards, { shuffle: false, random: () => 0 });
   const host = store.createRoom('호스트');

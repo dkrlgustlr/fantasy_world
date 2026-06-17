@@ -28,6 +28,13 @@ test('score screen shows final hand card images and can restart the same room', 
   assert.match(app, /\/assets\/cards\/full\/\$\{imageId\}\.png/);
 });
 
+test('game screen has a real end button wired to manual scoring', () => {
+  assert.match(html, /id="endGame"/);
+  assert.match(html, />종료<\/button>/);
+  assert.match(app, /endGame: document\.querySelector\('#endGame'\)/);
+  assert.match(app, /els\.endGame\.addEventListener\('click', \(\) => postAction\('end'\)\)/);
+});
+
 test('score screen card previews open the detail overlay', () => {
   assert.match(app, /els\.scoreRows\.addEventListener\('click'/);
   assert.match(app, /data-score-card-detail/);

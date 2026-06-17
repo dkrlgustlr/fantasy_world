@@ -224,7 +224,8 @@ label {
 }
 
 .player-row,
-.status-strip > div {
+.status-strip > div,
+.end-game-button {
   display: flex;
   justify-content: space-between;
   border-radius: 8px;
@@ -334,7 +335,7 @@ label {
 
 .status-strip {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr) auto;
   gap: 8px;
   grid-column: 1 / -1;
   margin-bottom: 0;
@@ -367,6 +368,24 @@ label {
 
 .status-strip strong {
   font-size: 18px;
+}
+
+.end-game-button {
+  align-items: center;
+  justify-content: center;
+  min-width: 82px;
+  min-height: auto;
+  border: 1px solid rgba(255, 224, 164, 0.42);
+  background:
+    linear-gradient(rgba(116, 42, 30, 0.82), rgba(76, 24, 18, 0.9)),
+    var(--ui-button),
+    #7a2f22;
+  background-size: auto, cover, auto;
+  color: #fff4df;
+  padding: 8px 14px;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 236, 190, 0.08),
+    0 6px 12px rgba(0, 0, 0, 0.22);
 }
 
 .section-head {
@@ -1210,8 +1229,14 @@ label {
     padding: 8px;
   }
 
-  .status-strip > div {
+  .status-strip > div,
+  .end-game-button {
     padding: 4px 7px;
+  }
+
+  .end-game-button {
+    min-width: 58px;
+    font-size: 12px;
   }
 
   .status-strip strong {
@@ -1461,7 +1486,8 @@ label {
     padding: 0;
   }
 
-  .status-strip > div {
+  .status-strip > div,
+  .end-game-button {
     min-height: 56px;
     border-radius: 8px;
     border: 1px solid rgba(255, 219, 160, 0.18);
@@ -1470,6 +1496,16 @@ label {
     padding: 8px 9px;
     text-align: left;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+
+  .end-game-button {
+    grid-column: 1 / -1;
+    min-height: 42px;
+    background:
+      linear-gradient(rgba(125, 41, 31, 0.88), rgba(75, 24, 18, 0.92)),
+      var(--ui-button),
+      #7a2f22;
+    background-size: auto, cover, auto;
   }
 
   .status-strip span {
