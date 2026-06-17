@@ -9,7 +9,7 @@ test('creates a game store object', () => {
 });
 
 test('creates a room with the 53-card base deck', () => {
-  const store = createGameStore(cards, { shuffle: false });
+  const store = createGameStore(cards, { shuffle: false, random: () => 0 });
   const room = store.createRoom('첫 플레이어');
 
   assert.equal(cards.length, 53);
@@ -18,7 +18,7 @@ test('creates a room with the 53-card base deck', () => {
 });
 
 test('allows exactly two players to join a room', () => {
-  const store = createGameStore(cards, { shuffle: false });
+  const store = createGameStore(cards, { shuffle: false, random: () => 0 });
   const created = store.createRoom('호스트');
   const joined = store.joinRoom(created.code, '게스트');
 
@@ -30,7 +30,7 @@ test('allows exactly two players to join a room', () => {
 });
 
 test('returns a player-scoped room view', () => {
-  const store = createGameStore(cards, { shuffle: false });
+  const store = createGameStore(cards, { shuffle: false, random: () => 0 });
   const host = store.createRoom('호스트');
   store.joinRoom(host.code, '게스트');
 
@@ -40,8 +40,8 @@ test('returns a player-scoped room view', () => {
   assert.equal(view.players.length, 2);
 });
 
-test('starts a two-player game with private seven-card hands', () => {
-  const store = createGameStore(cards, { shuffle: false });
+test('starts a two-player game by flipping a coin for the first turn', () => {
+  const store = createGameStore(cards, { shuffle: false, random: () => 0.75 });
   const host = store.createRoom('호스트');
   const guest = store.joinRoom(host.code, '게스트');
 
@@ -49,7 +49,7 @@ test('starts a two-player game with private seven-card hands', () => {
   const hostView = store.getView(host.code, host.playerToken);
   const guestView = store.getView(host.code, guest.playerToken);
 
-  assert.equal(started.phase, 'playing');
+  assert.equal(started.phase, 'flipping');
   assert.equal(started.you.id, 'p1');
   assert.equal(started.discardPile.length, 0);
   assert.equal(hostView.you.hand.length, 7);
@@ -57,11 +57,17 @@ test('starts a two-player game with private seven-card hands', () => {
   assert.equal(hostView.players.find((player) => !player.isYou).handCount, 7);
   assert.equal(hostView.players.find((player) => !player.isYou).hand, undefined);
   assert.equal(hostView.deckCount, 39);
-  assert.equal(hostView.currentPlayerId, 'p1');
+  assert.equal(hostView.currentPlayerId, null);
+  assert.equal(hostView.coinToss.winnerPlayerId, 'p2');
+  assert.throws(() => store.drawFromDeck(host.code, guest.playerToken));
+
+  const afterCoin = store.finishCoinToss(host.code, host.playerToken);
+  assert.equal(afterCoin.phase, 'playing');
+  assert.equal(afterCoin.currentPlayerId, 'p2');
 });
 
 test('creates a started solo test room with both player tokens', () => {
-  const store = createGameStore(cards, { shuffle: false });
+  const store = createGameStore(cards, { shuffle: false, random: () => 0 });
   const solo = store.createSoloTestRoom('테스터');
 
   assert.equal(solo.phase, 'playing');
@@ -86,10 +92,11 @@ test('creates a started solo test room with both player tokens', () => {
 });
 
 test('enforces draw then discard turn order', () => {
-  const store = createGameStore(cards, { shuffle: false });
+  const store = createGameStore(cards, { shuffle: false, random: () => 0 });
   const host = store.createRoom('호스트');
   const guest = store.joinRoom(host.code, '게스트');
   store.startGame(host.code, host.playerToken);
+  store.finishCoinToss(host.code, host.playerToken);
 
   assert.throws(
     () => store.discardCard(host.code, host.playerToken, 'mountain'),
@@ -116,10 +123,11 @@ test('enforces draw then discard turn order', () => {
 });
 
 test('can draw a visible discard card', () => {
-  const store = createGameStore(cards, { shuffle: false });
+  const store = createGameStore(cards, { shuffle: false, random: () => 0 });
   const host = store.createRoom('호스트');
   const guest = store.joinRoom(host.code, '게스트');
   store.startGame(host.code, host.playerToken);
+  store.finishCoinToss(host.code, host.playerToken);
   store.drawFromDeck(host.code, host.playerToken);
   store.discardCard(host.code, host.playerToken, 'mountain');
 
@@ -129,10 +137,11 @@ test('can draw a visible discard card', () => {
 });
 
 test('ends at ten discarded cards and totals manual scores', () => {
-  const store = createGameStore(cards, { shuffle: false });
+  const store = createGameStore(cards, { shuffle: false, random: () => 0 });
   const host = store.createRoom('호스트');
   const guest = store.joinRoom(host.code, '게스트');
   store.startGame(host.code, host.playerToken);
+  store.finishCoinToss(host.code, host.playerToken);
 
   for (let turn = 0; turn < 10; turn += 1) {
     const token = turn % 2 === 0 ? host.playerToken : guest.playerToken;
@@ -158,7 +167,7 @@ test('ends at ten discarded cards and totals manual scores', () => {
 });
 
 test('keeps score manual by not including automatic score previews', () => {
-  const store = createGameStore(cards, { shuffle: false });
+  const store = createGameStore(cards, { shuffle: false, random: () => 0 });
   const host = store.createRoom('Score Host');
   store.joinRoom(host.code, 'Score Guest');
 
@@ -168,10 +177,11 @@ test('keeps score manual by not including automatic score previews', () => {
 });
 
 test('restarts an ended game in the same room with the same players', () => {
-  const store = createGameStore(cards, { shuffle: false });
+  const store = createGameStore(cards, { shuffle: false, random: () => 0 });
   const host = store.createRoom('Restart Host');
   const guest = store.joinRoom(host.code, 'Restart Guest');
   store.startGame(host.code, host.playerToken);
+  store.finishCoinToss(host.code, host.playerToken);
 
   for (let turn = 0; turn < 10; turn += 1) {
     const token = turn % 2 === 0 ? host.playerToken : guest.playerToken;
@@ -189,7 +199,7 @@ test('restarts an ended game in the same room with the same players', () => {
 
   const restarted = store.restartGame(host.code, host.playerToken);
 
-  assert.equal(restarted.phase, 'playing');
+  assert.equal(restarted.phase, 'flipping');
   assert.equal(restarted.code, host.code);
   assert.equal(restarted.players.length, 2);
   assert.equal(restarted.players[0].name, 'Restart Host');
@@ -197,6 +207,10 @@ test('restarts an ended game in the same room with the same players', () => {
   assert.equal(restarted.discardPile.length, 0);
   assert.equal(restarted.deckCount, 39);
   assert.equal(restarted.you.hand.length, 7);
-  assert.equal(restarted.currentPlayerId, 'p1');
+  assert.equal(restarted.currentPlayerId, null);
   assert.deepEqual(restarted.scores, {});
+
+  const afterRestartCoin = store.finishCoinToss(host.code, host.playerToken);
+  assert.equal(afterRestartCoin.phase, 'playing');
+  assert.equal(afterRestartCoin.currentPlayerId, 'p1');
 });

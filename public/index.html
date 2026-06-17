@@ -51,7 +51,18 @@
           <strong id="lobbyCode">------</strong>
         </div>
         <div id="lobbyPlayers" class="player-list"></div>
-        <button id="startGame">게임 시작</button>
+        <button id="startGame">선 정하기</button>
+      </section>
+
+      <section id="coinToss" class="panel coin-panel hidden">
+        <div class="section-head">
+          <h2>선 정하기</h2>
+          <p id="coinResult">동전이 돌고 있습니다.</p>
+        </div>
+        <div class="coin-stage" aria-live="polite">
+          <img id="coinImage" class="coin-image is-spinning" src="/assets/ui/coin-first-player.png" alt="선 정하기 동전">
+        </div>
+        <div id="coinPlayers" class="player-list"></div>
       </section>
 
       <section id="game" class="hidden">

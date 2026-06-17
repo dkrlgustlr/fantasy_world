@@ -1,6 +1,8 @@
 export function createGameStore(cards = [], options = {}) {
   const rooms = new Map();
   const shuffle = options.shuffle === false ? (deck) => deck : shuffleDeck;
+  const random = options.random || Math.random;
+  const coinDurationMs = Number(options.coinDurationMs || 1800);
 
   return {
     createRoom(playerName) {
@@ -18,6 +20,7 @@ export function createGameStore(cards = [], options = {}) {
         discardPile: [],
         phase: 'waiting',
         currentPlayerId: null,
+        coinToss: null,
         drawnThisTurn: false,
         scores: {}
       };
@@ -66,6 +69,7 @@ export function createGameStore(cards = [], options = {}) {
         discardPile: [],
         phase: 'playing',
         currentPlayerId: 'p1',
+        coinToss: null,
         drawnThisTurn: false,
         scores: {}
       };
@@ -100,9 +104,17 @@ export function createGameStore(cards = [], options = {}) {
       for (const player of room.players) {
         player.hand = room.deck.splice(0, 7);
       }
-      room.phase = 'playing';
-      room.currentPlayerId = room.players[0].id;
+      room.phase = 'flipping';
+      room.currentPlayerId = null;
+      room.coinToss = createCoinToss(room, random, coinDurationMs);
       room.drawnThisTurn = false;
+      return playerView(room, player);
+    },
+
+    finishCoinToss(code, playerToken) {
+      const room = requireRoom(rooms, code);
+      const player = requirePlayer(room, playerToken);
+      finishCoinTossRoom(room);
       return playerView(room, player);
     },
 
@@ -115,8 +127,9 @@ export function createGameStore(cards = [], options = {}) {
       room.deck = shuffle(cards.map((card) => ({ ...card })));
       room.discardPile = [];
       room.scores = {};
-      room.phase = 'playing';
-      room.currentPlayerId = room.players[0].id;
+      room.phase = 'flipping';
+      room.currentPlayerId = null;
+      room.coinToss = createCoinToss(room, random, coinDurationMs);
       room.drawnThisTurn = false;
       for (const roomPlayer of room.players) {
         roomPlayer.hand = room.deck.splice(0, 7);
@@ -192,6 +205,8 @@ export function createPersistentGameStore(cards = [], options = {}) {
     throw new Error('A room repository is required for persistent game storage.');
   }
   const shuffle = options.shuffle === false ? (deck) => deck : shuffleDeck;
+  const random = options.random || Math.random;
+  const coinDurationMs = Number(options.coinDurationMs || 1800);
   const locks = new Map();
 
   return {
@@ -210,6 +225,7 @@ export function createPersistentGameStore(cards = [], options = {}) {
         discardPile: [],
         phase: 'waiting',
         currentPlayerId: null,
+        coinToss: null,
         drawnThisTurn: false,
         scores: {}
       };
@@ -259,6 +275,7 @@ export function createPersistentGameStore(cards = [], options = {}) {
         discardPile: [],
         phase: 'playing',
         currentPlayerId: 'p1',
+        coinToss: null,
         drawnThisTurn: false,
         scores: {}
       };
@@ -293,9 +310,18 @@ export function createPersistentGameStore(cards = [], options = {}) {
         for (const roomPlayer of room.players) {
           roomPlayer.hand = room.deck.splice(0, 7);
         }
-        room.phase = 'playing';
-        room.currentPlayerId = room.players[0].id;
+        room.phase = 'flipping';
+        room.currentPlayerId = null;
+        room.coinToss = createCoinToss(room, random, coinDurationMs);
         room.drawnThisTurn = false;
+        return playerView(room, player);
+      });
+    },
+
+    async finishCoinToss(code, playerToken) {
+      return mutateRoom(repository, locks, code, (room) => {
+        const player = requirePlayer(room, playerToken);
+        finishCoinTossRoom(room);
         return playerView(room, player);
       });
     },
@@ -309,8 +335,9 @@ export function createPersistentGameStore(cards = [], options = {}) {
         room.deck = shuffle(cards.map((card) => ({ ...card })));
         room.discardPile = [];
         room.scores = {};
-        room.phase = 'playing';
-        room.currentPlayerId = room.players[0].id;
+        room.phase = 'flipping';
+        room.currentPlayerId = null;
+        room.coinToss = createCoinToss(room, random, coinDurationMs);
         room.drawnThisTurn = false;
         for (const roomPlayer of room.players) {
           roomPlayer.hand = room.deck.splice(0, 7);
@@ -392,6 +419,7 @@ function playerView(room, player) {
     deckCount: room.deck.length,
     discardPile: [...room.discardPile],
     currentPlayerId: room.currentPlayerId,
+    coinToss: publicCoinToss(room),
     drawnThisTurn: room.drawnThisTurn,
     you: {
       id: player.id,
@@ -414,10 +442,47 @@ function publicRoomSummary(room) {
     phase: room.phase,
     deckCount: room.deck.length,
     discardCount: room.discardPile.length,
+    currentPlayerId: room.currentPlayerId,
+    coinToss: publicCoinToss(room),
     players: room.players.map((player) => ({
       id: player.id,
       name: player.name
     }))
+  };
+}
+
+function createCoinToss(room, random, durationMs) {
+  const winnerIndex = Math.floor(random() * room.players.length);
+  const winner = room.players[Math.min(winnerIndex, room.players.length - 1)] || room.players[0];
+  const startedAt = Date.now();
+  return {
+    startedAt,
+    revealAt: startedAt + durationMs,
+    durationMs,
+    winnerPlayerId: winner.id
+  };
+}
+
+function finishCoinTossRoom(room) {
+  if (room.phase === 'playing') {
+    return;
+  }
+  if (room.phase !== 'flipping') {
+    throw new Error('선 정하기 중인 게임이 아닙니다.');
+  }
+  room.phase = 'playing';
+  room.currentPlayerId = room.coinToss?.winnerPlayerId || room.players[0]?.id || null;
+  room.drawnThisTurn = false;
+}
+
+function publicCoinToss(room) {
+  if (!room.coinToss) {
+    return null;
+  }
+  const winner = room.players.find((player) => player.id === room.coinToss.winnerPlayerId);
+  return {
+    ...room.coinToss,
+    winnerName: winner?.name || ''
   };
 }
 

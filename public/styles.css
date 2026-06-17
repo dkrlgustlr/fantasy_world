@@ -232,6 +232,81 @@ label {
   padding: 10px 12px;
 }
 
+.player-row.is-first-player {
+  background: linear-gradient(90deg, rgba(214, 157, 63, 0.36), rgba(234, 217, 194, 0.94));
+  color: #2d1b0c;
+  box-shadow:
+    inset 0 0 0 1px rgba(122, 72, 22, 0.22),
+    0 5px 12px rgba(106, 62, 17, 0.16);
+}
+
+.coin-panel {
+  width: min(560px, 100%);
+  margin-inline: auto;
+  text-align: center;
+  overflow: hidden;
+}
+
+.coin-panel .section-head {
+  align-items: center;
+}
+
+.coin-panel .section-head h2 {
+  font-size: 22px;
+}
+
+.coin-panel .section-head p {
+  color: #6a4a24;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.coin-stage {
+  display: grid;
+  place-items: center;
+  min-height: 290px;
+  border-radius: 10px;
+  background:
+    radial-gradient(circle, rgba(255, 211, 119, 0.3), transparent 48%),
+    linear-gradient(rgba(6, 18, 14, 0.86), rgba(6, 18, 14, 0.94)),
+    var(--ui-panel);
+  background-size: auto, auto, cover;
+  perspective: 900px;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 230, 176, 0.18),
+    inset 0 0 42px rgba(0, 0, 0, 0.38);
+}
+
+.coin-image {
+  --coin-asset: url("/assets/ui/coin-first-player.png");
+  display: block;
+  width: min(250px, 62vw);
+  aspect-ratio: 1;
+  object-fit: contain;
+  filter:
+    drop-shadow(0 22px 22px rgba(0, 0, 0, 0.5))
+    drop-shadow(0 0 16px rgba(255, 194, 87, 0.28));
+  transform-style: preserve-3d;
+}
+
+.coin-image.is-spinning {
+  animation: coinFlip 180ms linear infinite;
+}
+
+@keyframes coinFlip {
+  0% {
+    transform: rotateY(0deg) rotateZ(-4deg);
+  }
+
+  50% {
+    transform: rotateY(180deg) rotateZ(4deg) scale(1.04);
+  }
+
+  100% {
+    transform: rotateY(360deg) rotateZ(-4deg);
+  }
+}
+
 #game {
   display: grid;
   grid-template-columns: clamp(170px, 13vw, 210px) minmax(0, 1fr) clamp(170px, 13vw, 210px);
@@ -1156,6 +1231,19 @@ label {
     gap: 8px;
   }
 
+  .coin-panel {
+    width: min(520px, 100%);
+    padding: 10px;
+  }
+
+  .coin-stage {
+    min-height: 184px;
+  }
+
+  .coin-image {
+    width: min(168px, 32vw);
+  }
+
   #drawDeck {
     width: min(100%, 94px);
     font-size: 12px;
@@ -1351,6 +1439,19 @@ label {
   .opponent-panel {
     grid-column: 1;
     grid-row: auto;
+  }
+
+  .coin-panel {
+    margin: 0;
+    padding: 12px;
+  }
+
+  .coin-stage {
+    min-height: 270px;
+  }
+
+  .coin-image {
+    width: min(230px, 68vw);
   }
 
   .status-strip {

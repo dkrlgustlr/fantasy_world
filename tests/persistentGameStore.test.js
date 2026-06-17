@@ -10,6 +10,7 @@ test('persistent game store restores rooms from a shared repository', async () =
   const created = await firstStore.createRoom('Remote Host');
   await firstStore.joinRoom(created.code, 'Remote Guest');
   await firstStore.startGame(created.code, created.playerToken);
+  await firstStore.finishCoinToss(created.code, created.playerToken);
 
   const secondStore = createPersistentGameStore(cards, { repository, shuffle: false });
   const restored = await secondStore.getView(created.code, created.playerToken);
@@ -24,10 +25,11 @@ test('persistent game store restores rooms from a shared repository', async () =
 
 test('persistent game store keeps restart state in the shared repository', async () => {
   const repository = createMemoryRoomRepository();
-  const firstStore = createPersistentGameStore(cards, { repository, shuffle: false });
+  const firstStore = createPersistentGameStore(cards, { repository, shuffle: false, random: () => 0 });
   const host = await firstStore.createRoom('Persistent Host');
   const guest = await firstStore.joinRoom(host.code, 'Persistent Guest');
   await firstStore.startGame(host.code, host.playerToken);
+  await firstStore.finishCoinToss(host.code, host.playerToken);
 
   for (let turn = 0; turn < 10; turn += 1) {
     const token = turn % 2 === 0 ? host.playerToken : guest.playerToken;
@@ -36,7 +38,8 @@ test('persistent game store keeps restart state in the shared repository', async
   }
 
   const restarted = await firstStore.restartGame(host.code, host.playerToken);
-  assert.equal(restarted.phase, 'playing');
+  assert.equal(restarted.phase, 'flipping');
+  await firstStore.finishCoinToss(host.code, host.playerToken);
 
   const secondStore = createPersistentGameStore(cards, { repository, shuffle: false });
   const restored = await secondStore.getView(host.code, host.playerToken);

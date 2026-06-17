@@ -20,6 +20,10 @@ const els = {
   lobbyCode: document.querySelector('#lobbyCode'),
   lobbyPlayers: document.querySelector('#lobbyPlayers'),
   startGame: document.querySelector('#startGame'),
+  coinToss: document.querySelector('#coinToss'),
+  coinImage: document.querySelector('#coinImage'),
+  coinResult: document.querySelector('#coinResult'),
+  coinPlayers: document.querySelector('#coinPlayers'),
   gameCode: document.querySelector('#gameCode'),
   deckCount: document.querySelector('#deckCount'),
   discardCount: document.querySelector('#discardCount'),
@@ -51,7 +55,9 @@ let state = {
   testTokens: readSavedTestTokens(),
   selectedCardId: '',
   view: null,
-  events: null
+  events: null,
+  coinRevealTimer: null,
+  coinFinishTimer: null
 };
 
 const cardSounds = createCardSoundEffects();
@@ -215,10 +221,17 @@ function render() {
   renderTestControls(view);
   els.connection.textContent = view.phase === 'ended' ? '종료' : '연결됨';
   if (view.phase === 'waiting') {
+    clearCoinTimers();
     renderLobby(view);
     showOnly('lobby');
     return;
   }
+  if (view.phase === 'flipping') {
+    renderCoinToss(view);
+    showOnly('coinToss');
+    return;
+  }
+  clearCoinTimers();
   renderGame(view);
   showOnly(view.phase === 'ended' ? 'score' : 'game');
 }
@@ -229,6 +242,52 @@ function renderLobby(view) {
     .map((player) => `<div class="player-row"><span>${escapeHtml(player.name)}</span><strong>${player.isYou ? '나' : '상대'}</strong></div>`)
     .join('');
   els.startGame.disabled = view.players.length !== 2;
+}
+
+function renderCoinToss(view) {
+  const coin = view.coinToss || {};
+  const revealDelay = Math.max(0, Number(coin.revealAt || Date.now()) - Date.now());
+  const winnerName = coin.winnerName || playerNameById(view, coin.winnerPlayerId) || '선공 플레이어';
+
+  clearCoinTimers();
+  els.coinImage.classList.add('is-spinning');
+  els.coinResult.textContent = '동전이 돌고 있습니다.';
+  renderCoinPlayers(view, false);
+
+  state.coinRevealTimer = window.setTimeout(() => {
+    els.coinImage.classList.remove('is-spinning');
+    els.coinResult.textContent = `${winnerName} 선공!`;
+    renderCoinPlayers(view, true);
+    state.coinFinishTimer = window.setTimeout(() => {
+      postAction('finish-coin');
+    }, 700);
+  }, revealDelay);
+}
+
+function renderCoinPlayers(view, revealed) {
+  const winnerPlayerId = view.coinToss?.winnerPlayerId;
+  els.coinPlayers.innerHTML = view.players
+    .map((player) => {
+      const isWinner = revealed && player.id === winnerPlayerId;
+      const label = isWinner ? '선공' : player.isYou ? '나' : '상대';
+      return `<div class="player-row${isWinner ? ' is-first-player' : ''}"><span>${escapeHtml(player.name)}</span><strong>${label}</strong></div>`;
+    })
+    .join('');
+}
+
+function clearCoinTimers() {
+  if (state.coinRevealTimer) {
+    window.clearTimeout(state.coinRevealTimer);
+    state.coinRevealTimer = null;
+  }
+  if (state.coinFinishTimer) {
+    window.clearTimeout(state.coinFinishTimer);
+    state.coinFinishTimer = null;
+  }
+}
+
+function playerNameById(view, playerId) {
+  return view.players.find((player) => player.id === playerId)?.name || '';
 }
 
 function renderGame(view) {
@@ -542,7 +601,7 @@ function playerName() {
 
 function showOnly(section) {
   document.body.dataset.screen = section;
-  for (const key of ['entry', 'lobby', 'game', 'score']) {
+  for (const key of ['entry', 'lobby', 'coinToss', 'game', 'score']) {
     els[key].classList.toggle('hidden', key !== section);
   }
 }
