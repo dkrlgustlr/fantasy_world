@@ -4,19 +4,34 @@ import { readFileSync } from 'node:fs';
 
 const app = readFileSync('public/app.js', 'utf8');
 const html = readFileSync('public/index.html', 'utf8');
+const css = readFileSync('public/styles.css', 'utf8');
 
 test('score screen stays manual instead of using automatic score defaults', () => {
   assert.doesNotMatch(app, /autoScore/);
   assert.doesNotMatch(app, /autoRowsById/);
   assert.doesNotMatch(app, /자동 계산/);
-  assert.match(app, /value="\$\{card\.base\}"/);
-  assert.match(app, /class="bonus" value="0"/);
+  assert.match(app, /value="\$\{baseValue\}"/);
+  assert.match(app, /scoreRow\.defaultBase/);
+  assert.match(app, /const bonusValue = draft\?\.bonus \?\? 0/);
+  assert.match(app, /class="bonus" value="\$\{bonusValue\}"/);
 });
 
 test('score screen has a special-card choice helper area', () => {
   assert.match(html, /id="specialChoices"/);
   assert.match(app, /specialChoicesForHand/);
   assert.match(app, /renderSpecialChoices/);
+});
+
+test('score screen can transform special cards into selected score rows', () => {
+  assert.match(app, /buildScoreRows/);
+  assert.match(app, /scoreTransforms/);
+  assert.match(app, /data-special-target/);
+  assert.match(app, /data-clear-special/);
+  assert.match(app, /data-book-suit/);
+  assert.match(app, /renderScoreTransformNote/);
+  assert.match(app, /scoreRow\.displayCard/);
+  assert.match(css, /\.special-targets/);
+  assert.match(css, /\.score-transform-note/);
 });
 
 test('score screen can reveal discarded cards for end-game choices', () => {

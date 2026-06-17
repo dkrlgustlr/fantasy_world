@@ -1,5 +1,6 @@
 import { renderCardDetail } from './cardDetail.js';
 import { renderCard as renderStructuredCard } from './cardView.js';
+import { BOOK_CHANGE_SUITS, buildScoreRows } from './scoreTransforms.js';
 import { createCardSoundEffects } from './soundEffects.js';
 import { specialChoicesForHand } from './specialCards.js';
 
@@ -61,6 +62,8 @@ let state = {
   playerToken: localStorage.getItem('fw:token') || '',
   testTokens: readSavedTestTokens(),
   selectedCardId: '',
+  scoreTransforms: {},
+  scoreContextKey: '',
   view: null,
   events: null,
   coinRevealTimer: null,
@@ -105,6 +108,8 @@ els.viewDiscardedCards.addEventListener('click', () => {
     ? `버린 카드 보기 (${state.view?.discardPile?.length || 0})`
     : '버린 카드 숨기기';
 });
+els.specialChoices.addEventListener('click', handleSpecialChoiceClick);
+els.specialChoices.addEventListener('change', handleSpecialChoiceChange);
 els.submitScore.addEventListener('click', submitScore);
 els.restartGame.addEventListener('click', () => postAction('restart'));
 els.closeCardOverlay.addEventListener('click', closeCardDetail);
@@ -207,6 +212,7 @@ async function postAction(action, body = {}) {
   });
   if (action === 'restart') {
     state.selectedCardId = '';
+    resetScoreTransforms();
     closeCardDetail();
   }
   if (state.testTokens?.[result.currentPlayerId] && result.currentPlayerId !== result.you?.id) {
@@ -389,18 +395,34 @@ function renderOpponentHand(opponent) {
 
 function renderScore(view) {
   const handKey = view.you.hand.map((card) => card.id).join('|');
-  if (els.scoreRows.dataset.playerId !== view.you.id || els.scoreRows.dataset.handKey !== handKey) {
-    els.scoreRows.innerHTML = view.you.hand.map((card) => {
-      const imageId = encodeURIComponent(card.id);
+  const scoreContextKey = `${view.code}:${view.you.id}:${handKey}`;
+  if (state.scoreContextKey !== scoreContextKey) {
+    state.scoreContextKey = scoreContextKey;
+    state.scoreTransforms = {};
+  }
+  const transformKey = JSON.stringify(state.scoreTransforms);
+  if (els.scoreRows.dataset.playerId !== view.you.id || els.scoreRows.dataset.handKey !== handKey || els.scoreRows.dataset.transformKey !== transformKey) {
+    const scoreDrafts = readScoreDrafts();
+    const scoreRows = buildScoreRows(view.you.hand, view.discardPile, state.scoreTransforms);
+    els.scoreRows.innerHTML = scoreRows.map((scoreRow) => {
+      const card = scoreRow.sourceCard;
+      const displayCard = scoreRow.displayCard;
+      const imageId = encodeURIComponent(displayCard.id);
+      const draft = scoreDrafts[scoreRow.cardId];
+      const baseValue = scoreRow.note ? scoreRow.defaultBase : (draft?.base ?? scoreRow.defaultBase);
+      const bonusValue = draft?.bonus ?? 0;
       return `
-        <div class="score-row" data-card-id="${card.id}">
-          <button class="score-card-preview" type="button" data-score-card-detail="${escapeHtml(card.id)}" aria-label="${escapeHtml(card.name)} 자세히 보기">
-            <img class="score-card-image" src="${scoreCardImageSrc(card)}" data-fallback-src="/assets/cards/generated/${imageId}.png" alt="${escapeHtml(card.name)}" loading="lazy">
+        <div class="score-row ${scoreRow.note ? 'is-transformed' : ''}" data-card-id="${escapeHtml(scoreRow.cardId)}">
+          <button class="score-card-preview" type="button" data-score-card-detail="${escapeHtml(scoreRow.detailCardId)}" aria-label="${escapeHtml(displayCard.name)} 자세히 보기">
+            <img class="score-card-image" src="${scoreCardImageSrc(displayCard)}" data-fallback-src="/assets/cards/generated/${imageId}.png" alt="${escapeHtml(displayCard.name)}" loading="lazy">
           </button>
           <div class="score-card-fields">
-            <strong>${escapeHtml(card.name)}</strong>
-            <label>기본 힘<input type="number" class="base" value="${card.base}"></label>
-            <label>보너스/페널티<input type="number" class="bonus" value="0"></label>
+            <div>
+              <strong>${renderScoreRowName(card, displayCard)}</strong>
+              ${renderScoreTransformNote(scoreRow)}
+            </div>
+            <label>기본 힘<input type="number" class="base" value="${baseValue}"></label>
+            <label>보너스/페널티<input type="number" class="bonus" value="${bonusValue}"></label>
           </div>
         </div>
       `;
@@ -408,6 +430,7 @@ function renderScore(view) {
     bindImageFallbacks(els.scoreRows);
     els.scoreRows.dataset.playerId = view.you.id;
     els.scoreRows.dataset.handKey = handKey;
+    els.scoreRows.dataset.transformKey = transformKey;
   }
   renderSpecialChoices(view);
   renderScoreDiscardCards(view);
@@ -418,6 +441,28 @@ function renderScore(view) {
     const player = view.players.find((candidate) => candidate.id === playerId);
     return `<div>${escapeHtml(player?.name || playerId)}: ${result.total}점</div>`;
   }).join('');
+}
+
+function readScoreDrafts() {
+  return [...els.scoreRows.querySelectorAll('.score-row')].reduce((drafts, row) => {
+    drafts[row.dataset.cardId] = {
+      base: Number(row.querySelector('.base')?.value || 0),
+      bonus: Number(row.querySelector('.bonus')?.value || 0)
+    };
+    return drafts;
+  }, {});
+}
+
+function renderScoreRowName(sourceCard, displayCard) {
+  if (sourceCard.id === displayCard.id && sourceCard.suit === displayCard.suit) {
+    return `${escapeHtml(displayCard.name)} <span class="score-row-suit">${escapeHtml(displayCard.suit)}</span>`;
+  }
+  return `${escapeHtml(sourceCard.name)} -> ${escapeHtml(displayCard.name)} <span class="score-row-suit">${escapeHtml(displayCard.suit)}</span>`;
+}
+
+function renderScoreTransformNote(scoreRow) {
+  if (!scoreRow.note) return '';
+  return `<p class="score-transform-note">${escapeHtml(scoreRow.note)}</p>`;
 }
 
 function scoreCardImageSrc(card) {
@@ -470,13 +515,91 @@ function renderSpecialChoice(choice) {
   const targetText = choice.targets.length
     ? choice.targets.map((target) => `${target.name}(${target.suit})`).join(', ')
     : '현재 보이는 후보 없음';
+  const transform = state.scoreTransforms[choice.cardId];
+  const canTransform = isScoreTransformChoice(choice.cardId);
   return `
     <article class="special-choice">
-      <strong>${escapeHtml(choice.name)}</strong>
+      <div class="special-choice-title">
+        <strong>${escapeHtml(choice.name)}</strong>
+        ${transform?.targetId ? `<button class="special-clear" type="button" data-clear-special="${escapeHtml(choice.cardId)}">선택 해제</button>` : ''}
+      </div>
       <p>${escapeHtml(choice.prompt)}</p>
-      <small>후보: ${escapeHtml(targetText)}</small>
+      ${canTransform ? renderSpecialTargetControls(choice, transform) : `<small>후보: ${escapeHtml(targetText)}</small>`}
     </article>
   `;
+}
+
+function isScoreTransformChoice(cardId) {
+  return ['doppelganger', 'mirage', 'shapeshifter', 'book_of_changes', 'necromancer'].includes(cardId);
+}
+
+function renderSpecialTargetControls(choice, transform) {
+  if (!choice.targets.length) {
+    return '<small>현재 보이는 후보 없음</small>';
+  }
+  const suitPicker = choice.cardId === 'book_of_changes'
+    ? renderBookSuitPicker(transform?.suit)
+    : '';
+  return `
+    ${suitPicker}
+    <div class="special-targets">
+      ${choice.targets.map((target) => {
+        const isActive = transform?.targetId === target.id && transform?.source === target.source;
+        return `
+          <button class="special-target-button ${isActive ? 'is-active' : ''}" type="button" data-special-target="${escapeHtml(choice.cardId)}" data-target-card="${escapeHtml(target.id)}" data-target-source="${escapeHtml(target.source)}">
+            ${escapeHtml(target.name)}
+            <span>${escapeHtml(target.suit)} · ${target.source === 'discard' ? '버림' : '손패'}</span>
+          </button>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
+function renderBookSuitPicker(selectedSuit = BOOK_CHANGE_SUITS[0]) {
+  return `
+    <label class="special-suit-picker">
+      바꿀 종류
+      <select data-book-suit="book_of_changes">
+        ${BOOK_CHANGE_SUITS.map((suit) => `<option value="${escapeHtml(suit)}" ${suit === selectedSuit ? 'selected' : ''}>${escapeHtml(suit)}</option>`).join('')}
+      </select>
+    </label>
+  `;
+}
+
+function handleSpecialChoiceClick(event) {
+  const clearButton = event.target.closest?.('[data-clear-special]');
+  if (clearButton) {
+    delete state.scoreTransforms[clearButton.dataset.clearSpecial];
+    render();
+    return;
+  }
+
+  const targetButton = event.target.closest?.('[data-special-target]');
+  if (!targetButton) return;
+
+  const specialCardId = targetButton.dataset.specialTarget;
+  const previous = state.scoreTransforms[specialCardId] || {};
+  state.scoreTransforms[specialCardId] = {
+    ...previous,
+    targetId: targetButton.dataset.targetCard,
+    source: targetButton.dataset.targetSource
+  };
+  if (specialCardId === 'book_of_changes') {
+    state.scoreTransforms[specialCardId].suit = previous.suit || BOOK_CHANGE_SUITS[0];
+  }
+  render();
+}
+
+function handleSpecialChoiceChange(event) {
+  const suitSelect = event.target.closest?.('[data-book-suit]');
+  if (!suitSelect) return;
+  const previous = state.scoreTransforms.book_of_changes || {};
+  state.scoreTransforms.book_of_changes = {
+    ...previous,
+    suit: suitSelect.value
+  };
+  render();
 }
 
 function renderCard(card, options = {}) {
@@ -605,6 +728,11 @@ function closeRulesOverlay() {
   els.rulesOverlay.classList.add('hidden');
 }
 
+function resetScoreTransforms() {
+  state.scoreTransforms = {};
+  state.scoreContextKey = '';
+}
+
 function findVisibleCard(cardId) {
   const view = state.view;
   if (!view) return null;
@@ -662,6 +790,7 @@ function clearSession() {
   state.code = '';
   state.playerToken = '';
   state.selectedCardId = '';
+  resetScoreTransforms();
   state.view = null;
   localStorage.removeItem('fw:code');
   localStorage.removeItem('fw:token');
