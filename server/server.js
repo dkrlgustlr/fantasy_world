@@ -73,8 +73,6 @@ async function runRoomAction(code, action, token, body) {
       return store.finishCoinToss(code, token);
     case 'leave':
       return store.leaveRoom(code, token);
-    case 'end':
-      return store.endGame(code, token);
     case 'restart':
       return store.restartGame(code, token);
     case 'draw-deck':

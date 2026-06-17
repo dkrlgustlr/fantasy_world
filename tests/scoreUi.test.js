@@ -28,16 +28,16 @@ test('score screen shows final hand card images and can restart the same room', 
   assert.match(app, /\/assets\/cards\/full\/\$\{imageId\}\.png/);
 });
 
-test('game screen has a dedicated action bar for end and leave actions', () => {
+test('game screen has a dedicated action bar for leaving the room only', () => {
   assert.match(html, /id="roomActions"/);
-  assert.match(html, /id="endGame"/);
-  assert.match(html, />종료<\/button>/);
+  assert.doesNotMatch(html, /id="endGame"/);
+  assert.doesNotMatch(html, />종료<\/button>/);
   assert.match(html, /id="leaveRoom"/);
   assert.match(html, />방 나가기<\/button>/);
   assert.match(app, /roomActions: document\.querySelector\('#roomActions'\)/);
-  assert.match(app, /endGame: document\.querySelector\('#endGame'\)/);
+  assert.doesNotMatch(app, /endGame/);
+  assert.doesNotMatch(app, /postAction\('end'\)/);
   assert.match(app, /leaveRoom: document\.querySelector\('#leaveRoom'\)/);
-  assert.match(app, /els\.endGame\.addEventListener\('click', \(\) => postAction\('end'\)\)/);
   assert.match(app, /els\.leaveRoom\.addEventListener\('click', leaveRoom\)/);
 });
 

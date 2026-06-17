@@ -149,13 +149,6 @@ export function createGameStore(cards = [], options = {}) {
       return { left: true, code: room.code, deleted: false };
     },
 
-    endGame(code, playerToken) {
-      const room = requireRoom(rooms, code);
-      const player = requirePlayer(room, playerToken);
-      endGameRoom(room);
-      return playerView(room, player);
-    },
-
     drawFromDeck(code, playerToken) {
       const room = requireRoom(rooms, code);
       const player = requireTurnPlayer(room, playerToken);
@@ -381,14 +374,6 @@ export function createPersistentGameStore(cards = [], options = {}) {
       });
     },
 
-    async endGame(code, playerToken) {
-      return mutateRoom(repository, locks, code, (room) => {
-        const player = requirePlayer(room, playerToken);
-        endGameRoom(room);
-        return playerView(room, player);
-      });
-    },
-
     async drawFromDeck(code, playerToken) {
       return mutateRoom(repository, locks, code, (room) => {
         const player = requireTurnPlayer(room, playerToken);
@@ -515,18 +500,6 @@ function finishCoinTossRoom(room) {
   }
   room.phase = 'playing';
   room.currentPlayerId = room.coinToss?.winnerPlayerId || room.players[0]?.id || null;
-  room.drawnThisTurn = false;
-}
-
-function endGameRoom(room) {
-  if (room.phase === 'ended') {
-    return;
-  }
-  if (room.phase !== 'playing') {
-    throw new Error('진행 중인 게임만 종료할 수 있습니다.');
-  }
-  room.phase = 'ended';
-  room.currentPlayerId = null;
   room.drawnThisTurn = false;
 }
 

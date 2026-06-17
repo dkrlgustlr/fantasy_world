@@ -251,14 +251,6 @@ label {
   min-height: 46px;
 }
 
-.room-action-bar .danger-action {
-  background:
-    linear-gradient(rgba(126, 43, 30, 0.86), rgba(79, 24, 18, 0.94)),
-    var(--ui-button),
-    #7a2f22;
-  background-size: auto, cover, auto;
-}
-
 .room-action-bar .secondary-action {
   background:
     linear-gradient(rgba(46, 54, 50, 0.62), rgba(24, 30, 28, 0.88)),
@@ -1521,8 +1513,8 @@ label {
   }
 
   .room-action-bar {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    display: flex;
+    justify-content: stretch;
     gap: 8px;
     margin-bottom: 8px;
     border-color: rgba(255, 219, 160, 0.18);

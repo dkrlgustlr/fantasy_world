@@ -50,26 +50,6 @@ test('persistent game store keeps restart state in the shared repository', async
   assert.equal(restored.you.hand.length, 7);
 });
 
-test('persistent game store saves manual end state for scoring', async () => {
-  const repository = createMemoryRoomRepository();
-  const firstStore = createPersistentGameStore(cards, { repository, shuffle: false, random: () => 0 });
-  const host = await firstStore.createRoom('Persistent End Host');
-  await firstStore.joinRoom(host.code, 'Persistent End Guest');
-  await firstStore.startGame(host.code, host.playerToken);
-  await firstStore.finishCoinToss(host.code, host.playerToken);
-
-  const ended = await firstStore.endGame(host.code, host.playerToken);
-
-  assert.equal(ended.phase, 'ended');
-  assert.equal(ended.currentPlayerId, null);
-
-  const secondStore = createPersistentGameStore(cards, { repository, shuffle: false });
-  const restored = await secondStore.getView(host.code, host.playerToken);
-
-  assert.equal(restored.phase, 'ended');
-  assert.equal(restored.you.hand.length, 7);
-});
-
 test('persistent game store saves leave state for the remaining player', async () => {
   const repository = createMemoryRoomRepository();
   const firstStore = createPersistentGameStore(cards, { repository, shuffle: false, random: () => 0 });
