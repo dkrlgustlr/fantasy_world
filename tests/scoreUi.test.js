@@ -19,6 +19,18 @@ test('score screen has a special-card choice helper area', () => {
   assert.match(app, /renderSpecialChoices/);
 });
 
+test('score screen can reveal discarded cards for end-game choices', () => {
+  assert.match(html, /id="viewDiscardedCards"/);
+  assert.match(html, /id="scoreDiscardCards"/);
+  assert.match(html, />버린 카드 보기<\/button>/);
+  assert.match(app, /scoreDiscardCards: document\.querySelector\('#scoreDiscardCards'\)/);
+  assert.match(app, /viewDiscardedCards: document\.querySelector\('#viewDiscardedCards'\)/);
+  assert.match(app, /renderScoreDiscardCards/);
+  assert.match(app, /data-score-discard-detail/);
+  assert.match(app, /score-discard-card-image/);
+  assert.match(app, /openCardDetail\(discardButton\.dataset\.scoreDiscardDetail\)/);
+});
+
 test('score screen shows final hand card images and can restart the same room', () => {
   assert.match(html, /id="restartGame"/);
   assert.match(app, /restartGame: document\.querySelector\('#restartGame'\)/);

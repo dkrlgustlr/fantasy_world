@@ -41,6 +41,8 @@ const els = {
   opponentHand: document.querySelector('#opponentHand'),
   scoreRows: document.querySelector('#scoreRows'),
   specialChoices: document.querySelector('#specialChoices'),
+  scoreDiscardCards: document.querySelector('#scoreDiscardCards'),
+  viewDiscardedCards: document.querySelector('#viewDiscardedCards'),
   submitScore: document.querySelector('#submitScore'),
   restartGame: document.querySelector('#restartGame'),
   scoreStatus: document.querySelector('#scoreStatus'),
@@ -87,6 +89,17 @@ els.scoreRows.addEventListener('click', (event) => {
   const detailButton = event.target.closest?.('[data-score-card-detail]');
   if (!detailButton) return;
   openCardDetail(detailButton.dataset.scoreCardDetail);
+});
+els.scoreDiscardCards.addEventListener('click', (event) => {
+  const discardButton = event.target.closest?.('[data-score-discard-detail]');
+  if (!discardButton) return;
+  openCardDetail(discardButton.dataset.scoreDiscardDetail);
+});
+els.viewDiscardedCards.addEventListener('click', () => {
+  els.scoreDiscardCards.classList.toggle('hidden');
+  els.viewDiscardedCards.textContent = els.scoreDiscardCards.classList.contains('hidden')
+    ? `버린 카드 보기 (${state.view?.discardPile?.length || 0})`
+    : '버린 카드 숨기기';
 });
 els.submitScore.addEventListener('click', submitScore);
 els.restartGame.addEventListener('click', () => postAction('restart'));
@@ -386,6 +399,7 @@ function renderScore(view) {
     els.scoreRows.dataset.handKey = handKey;
   }
   renderSpecialChoices(view);
+  renderScoreDiscardCards(view);
   const score = view.scores?.[view.you.id];
   els.scoreStatus.textContent = score ? `내 제출 점수: ${score.total}` : '카드별 보너스/페널티를 직접 입력하세요.';
   const entries = Object.entries(view.scores || {});
@@ -398,6 +412,34 @@ function renderScore(view) {
 function scoreCardImageSrc(card) {
   const imageId = encodeURIComponent(card.id);
   return `/assets/cards/full/${imageId}.png`;
+}
+
+function renderScoreDiscardCards(view) {
+  if (!els.scoreDiscardCards || !els.viewDiscardedCards) return;
+
+  const discardPile = view.discardPile || [];
+  const discardKey = discardPile.map((card) => card.id).join('|');
+  const isOpen = !els.scoreDiscardCards.classList.contains('hidden');
+  els.viewDiscardedCards.disabled = discardPile.length === 0;
+  els.viewDiscardedCards.textContent = discardPile.length
+    ? (isOpen ? '버린 카드 숨기기' : `버린 카드 보기 (${discardPile.length})`)
+    : '버린 카드 없음';
+
+  if (els.scoreDiscardCards.dataset.discardKey === discardKey) return;
+
+  els.scoreDiscardCards.innerHTML = discardPile.length
+    ? discardPile.map((card) => {
+      const imageId = encodeURIComponent(card.id);
+      return `
+        <button class="score-discard-card" type="button" data-score-discard-detail="${escapeHtml(card.id)}" aria-label="${escapeHtml(card.name)} 자세히 보기">
+          <img class="score-discard-card-image" src="${scoreCardImageSrc(card)}" data-fallback-src="/assets/cards/generated/${imageId}.png" alt="${escapeHtml(card.name)}" loading="lazy">
+          <span>${escapeHtml(card.name)}</span>
+        </button>
+      `;
+    }).join('')
+    : '<p>버린 카드가 없습니다.</p>';
+  bindImageFallbacks(els.scoreDiscardCards);
+  els.scoreDiscardCards.dataset.discardKey = discardKey;
 }
 
 function renderSpecialChoices(view) {
