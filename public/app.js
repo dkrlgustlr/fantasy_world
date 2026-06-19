@@ -104,8 +104,9 @@ els.scoreDiscardCards.addEventListener('click', (event) => {
 });
 els.viewDiscardedCards.addEventListener('click', () => {
   els.scoreDiscardCards.classList.toggle('hidden');
+  const visibleDiscardCount = scoreVisibleDiscardPile(state.view?.discardPile || []).length;
   els.viewDiscardedCards.textContent = els.scoreDiscardCards.classList.contains('hidden')
-    ? `버린 카드 보기 (${state.view?.discardPile?.length || 0})`
+    ? `버린 카드 보기 (${visibleDiscardCount})`
     : '버린 카드 숨기기';
 });
 els.specialChoices.addEventListener('click', handleSpecialChoiceClick);
@@ -512,21 +513,35 @@ function scoreCardImageSrc(card) {
   return `/assets/cards/full/${imageId}.png`;
 }
 
+function claimedNecromancerDiscardId() {
+  const necromancer = state.scoreTransforms.necromancer;
+  return necromancer?.source === 'discard' ? necromancer.targetId : '';
+}
+
+function scoreVisibleDiscardPile(discardPile = []) {
+  const claimedNecromancerCardId = claimedNecromancerDiscardId();
+  return claimedNecromancerCardId
+    ? discardPile.filter((card) => card.id !== claimedNecromancerCardId)
+    : discardPile;
+}
+
 function renderScoreDiscardCards(view) {
   if (!els.scoreDiscardCards || !els.viewDiscardedCards) return;
 
   const discardPile = view.discardPile || [];
-  const discardKey = discardPile.map((card) => card.id).join('|');
+  const claimedNecromancerCardId = claimedNecromancerDiscardId();
+  const visibleDiscardPile = scoreVisibleDiscardPile(discardPile);
+  const discardKey = `${discardPile.map((card) => card.id).join('|')}|claimed:${claimedNecromancerCardId || ''}`;
   const isOpen = !els.scoreDiscardCards.classList.contains('hidden');
-  els.viewDiscardedCards.disabled = discardPile.length === 0;
-  els.viewDiscardedCards.textContent = discardPile.length
-    ? (isOpen ? '버린 카드 숨기기' : `버린 카드 보기 (${discardPile.length})`)
+  els.viewDiscardedCards.disabled = visibleDiscardPile.length === 0;
+  els.viewDiscardedCards.textContent = visibleDiscardPile.length
+    ? (isOpen ? '버린 카드 숨기기' : `버린 카드 보기 (${visibleDiscardPile.length})`)
     : '버린 카드 없음';
 
   if (els.scoreDiscardCards.dataset.discardKey === discardKey) return;
 
-  els.scoreDiscardCards.innerHTML = discardPile.length
-    ? discardPile.map((card) => {
+  els.scoreDiscardCards.innerHTML = visibleDiscardPile.length
+    ? visibleDiscardPile.map((card) => {
       const imageId = encodeURIComponent(card.id);
       return `
         <button class="score-discard-card" type="button" data-score-discard-detail="${escapeHtml(card.id)}" aria-label="${escapeHtml(card.name)} 자세히 보기">

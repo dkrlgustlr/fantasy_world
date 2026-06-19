@@ -46,6 +46,13 @@ test('score screen can reveal discarded cards for end-game choices', () => {
   assert.match(app, /openCardDetail\(discardButton\.dataset\.scoreDiscardDetail\)/);
 });
 
+test('score screen removes a necromancer-taken card from discarded card choices', () => {
+  assert.match(app, /function claimedNecromancerDiscardId/);
+  assert.match(app, /visibleDiscardPile/);
+  assert.match(app, /\.filter\(\(card\) => card\.id !== claimedNecromancerCardId\)/);
+  assert.match(app, /claimed:\$\{claimedNecromancerCardId \|\| ''\}/);
+});
+
 test('score screen shows every player score status in multiplayer rooms', () => {
   assert.match(app, /function renderScoreSummary/);
   assert.match(app, /view\.players\.map/);

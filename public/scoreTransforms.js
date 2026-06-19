@@ -72,12 +72,13 @@ function buildNecromancerRow(hand, discardPile, transform) {
   if (!target) return null;
   return {
     key: `necromancer:${target.id}`,
-    cardId: `necromancer:${target.id}`,
+    cardId: target.id,
     sourceCard: target,
     displayCard: target,
     detailCardId: target.id,
     defaultBase: target.base,
-    note: `강령술사: 버린 ${target.name} 추가`
+    isNecromancerCard: true,
+    note: `강령술사: 버린 ${target.name}을 가져온 카드`
   };
 }
 

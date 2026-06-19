@@ -53,7 +53,7 @@ test('book of changes changes the displayed suit of the chosen hand card', () =>
   assert.match(dragon.note, /변화의 책/);
 });
 
-test('necromancer adds a discarded target as an eighth score row', () => {
+test('necromancer brings a discarded target in as a real eighth score card', () => {
   const rows = buildScoreRows(hand(['necromancer', 'queen']), hand(['knights']), {
     necromancer: { targetId: 'knights', source: 'discard' }
   });
@@ -62,6 +62,7 @@ test('necromancer adds a discarded target as an eighth score row', () => {
   assert.equal(rows.length, 3);
   assert.equal(necromancerRow.displayCard.id, 'knights');
   assert.equal(necromancerRow.defaultBase, cardsById.knights.base);
-  assert.equal(necromancerRow.cardId, 'necromancer:knights');
+  assert.equal(necromancerRow.cardId, 'knights');
+  assert.equal(necromancerRow.isNecromancerCard, true);
   assert.match(necromancerRow.note, /강령술사/);
 });
