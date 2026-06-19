@@ -19,7 +19,7 @@ test('renders a baked card image as a selectable card without per-card controls'
   assert.match(html, /data-card-select="fire_elemental"/);
   assert.match(html, /class="card suit-fire"/);
   assert.match(html, /class="full-card-image"/);
-  assert.match(html, /src="\/assets\/cards\/full\/fire_elemental\.png"/);
+  assert.match(html, /src="\/assets\/cards\/thumb\/fire_elemental\.png"/);
   assert.match(html, /alt="Fire Elemental"/);
   assert.equal(html.includes('class="card-controls"'), false);
   assert.equal(html.includes('data-action='), false);
@@ -43,7 +43,7 @@ test('escapes baked card image alt text and selection attributes', () => {
 
   assert.equal(html.includes('<script>'), false);
   assert.match(html, /alt="&lt;script&gt;"/);
-  assert.match(html, /src="\/assets\/cards\/full\/bad-card\.png"/);
+  assert.match(html, /src="\/assets\/cards\/thumb\/bad-card\.png"/);
   assert.match(html, /data-card-select="bad-card"/);
   assert.equal(html.includes('discard:&lt;bad-card&gt;'), false);
 });

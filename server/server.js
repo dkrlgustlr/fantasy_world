@@ -45,8 +45,9 @@ const server = http.createServer(async (req, res) => {
         const body = await readJson(req);
         const token = body.playerToken;
         const result = await runRoomAction(code, action, token, body);
-        await broadcast(code);
-        return sendJson(res, 200, result);
+        sendJson(res, 200, result);
+        void broadcast(code);
+        return;
       }
     }
     return serveStatic(url.pathname, res);
@@ -109,13 +110,13 @@ async function openStream(req, res, code, token) {
 async function broadcast(code) {
   const clients = streams.get(code);
   if (!clients) return;
-  for (const client of clients) {
+  await Promise.all([...clients].map(async (client) => {
     try {
       sendEvent(client.res, await store.getView(code, client.token));
     } catch {
       clients.delete(client);
     }
-  }
+  }));
 }
 
 function sendEvent(res, payload) {

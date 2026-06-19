@@ -39,6 +39,17 @@ test('all baked full-card images exist with a Yu-Gi-Oh style card ratio', () => 
   }
 });
 
+test('all gameplay thumbnail card images exist at half resolution', () => {
+  for (const card of cards) {
+    const path = `public/assets/cards/thumb/${card.id}.png`;
+    assert.equal(existsSync(path), true, `${card.id} should have a gameplay thumbnail image`);
+
+    const { width, height } = readPngSize(path);
+    assert.equal(width, 295, `${card.id} thumbnail width`);
+    assert.equal(height, 430, `${card.id} thumbnail height`);
+  }
+});
+
 test('deck back asset exists for the draw deck control', () => {
   const path = 'public/assets/ui/cards/deck-back.png';
   assert.equal(existsSync(path), true, 'deck back image should exist');
