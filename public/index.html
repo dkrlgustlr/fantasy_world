@@ -71,7 +71,10 @@
           <p id="coinResult">동전이 돌고 있습니다.</p>
         </div>
         <div class="coin-stage" aria-live="polite">
-          <img id="coinImage" class="coin-image is-spinning" src="/assets/ui/coin-first-player.png" alt="선 정하기 동전">
+          <div id="coinImage" class="coin-image is-spinning" data-coin-side="spinning" role="img" aria-label="선 정하기 동전">
+            <img class="coin-face coin-front" src="/assets/ui/coin-front.png" alt="동전 앞면 선공">
+            <img class="coin-face coin-back" src="/assets/ui/coin-back.png" alt="동전 뒷면 후공">
+          </div>
         </div>
         <div id="coinPlayers" class="player-list"></div>
       </section>

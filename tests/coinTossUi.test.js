@@ -17,9 +17,18 @@ test('coin toss screen exists between lobby and gameplay', () => {
 });
 
 test('coin toss uses a rotating fantasy coin image asset', () => {
-  assert.equal(existsSync('public/assets/ui/coin-first-player.png'), true);
+  assert.equal(existsSync('public/assets/ui/coin-front.png'), true);
+  assert.equal(existsSync('public/assets/ui/coin-back.png'), true);
   assert.match(css, /\.coin-stage/);
-  assert.match(css, /coin-first-player\.png/);
+  assert.match(html, /coin-front\.png/);
+  assert.match(html, /coin-back\.png/);
   assert.match(css, /@keyframes coinFlip/);
   assert.match(css, /\.coin-image\.is-spinning/);
+});
+
+test('coin toss reveal clearly marks the first player and final coin side', () => {
+  assert.match(app, /els\.coinImage\.dataset\.coinSide = 'spinning'/);
+  assert.match(app, /els\.coinImage\.dataset\.coinSide = 'front'/);
+  assert.match(app, /선공: \$\{winnerName\}/);
+  assert.match(app, /const label = isWinner \? '선공' : revealed \? '후공' : player\.isYou \? '나' : '대기'/);
 });

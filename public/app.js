@@ -312,12 +312,14 @@ function renderCoinToss(view) {
 
   clearCoinTimers();
   els.coinImage.classList.add('is-spinning');
+  els.coinImage.dataset.coinSide = 'spinning';
   els.coinResult.textContent = '동전이 돌고 있습니다.';
   renderCoinPlayers(view, false);
 
   state.coinRevealTimer = window.setTimeout(() => {
     els.coinImage.classList.remove('is-spinning');
-    els.coinResult.textContent = `${winnerName} 선공!`;
+    els.coinImage.dataset.coinSide = 'front';
+    els.coinResult.textContent = `선공: ${winnerName}`;
     renderCoinPlayers(view, true);
     state.coinFinishTimer = window.setTimeout(() => {
       postAction('finish-coin');
@@ -330,7 +332,7 @@ function renderCoinPlayers(view, revealed) {
   els.coinPlayers.innerHTML = view.players
     .map((player) => {
       const isWinner = revealed && player.id === winnerPlayerId;
-      const label = isWinner ? '선공' : player.isYou ? '나' : '상대';
+      const label = isWinner ? '선공' : revealed ? '후공' : player.isYou ? '나' : '대기';
       return `<div class="player-row${isWinner ? ' is-first-player' : ''}"><span>${escapeHtml(player.name)}</span><strong>${label}</strong></div>`;
     })
     .join('');
